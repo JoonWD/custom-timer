@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import '../core/timer_engine.dart';
+import '../widgets/timer_display.dart';
+import '../widgets/time_adjuster_column.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -10,111 +12,121 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  TimerEngine engine = TimerEngine(hours: 0, minutes: 1, seconds: 0);
-  Timer? timer;
+  late final TimerEngine engine;
 
-  final TextEditingController hoursController = TextEditingController(text: "0");
-  final TextEditingController minutesController = TextEditingController(text: "1");
-  final TextEditingController secondsController = TextEditingController(text: "0");
-
-  void startTimer() {
-    if (timer != null) return;
-
-    setState(() {
-      engine.start();
-    });
-
-    timer = Timer.periodic(const Duration(seconds: 1), (_) {
-      setState(() {
-        engine.tick();
-
-        if (engine.isFinished) {
-          stopTimer();
-        }
-      });
-    });
+  @override
+  void initState() {
+    super.initState();
+    engine = TimerEngine(
+      onTick: () {
+        setState(() {});
+      },
+    );
   }
 
-  void pauseTimer() {
-    setState(() {
-      engine.pause();
-    });
+  @override
+  void dispose() {
+    engine.dispose();
+    super.dispose();
   }
-
-  void stopTimer() {
-    timer?.cancel();
-    timer = null;
-    setState(() {
-      engine.pause();
-    });
-  }
-
-  void resetTimer() {
-    stopTimer();
-
-    final h = int.tryParse(hoursController.text) ?? 0;
-    final m = int.tryParse(minutesController.text) ?? 0;
-    final s = int.tryParse(secondsController.text) ?? 0;
-
-    setState(() {
-      engine = TimerEngine(hours: h, minutes: m, seconds: s);
-    });
-  }
-
-  String format(int n) => n.toString().padLeft(2, '0');
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Custom Timer")),
-      body: Padding(
-        padding: const EdgeInsets.all(24),
+      appBar: AppBar(title: const Text('Custom Timer'), centerTitle: true),
+      body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(
-              "${format(engine.displayHours)}:"
-              "${format(engine.displayMinutes)}:"
-              "${format(engine.displaySeconds)}",
-              style: const TextStyle(fontSize: 48, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 30),
-
+            // + + +
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                _timeField(hoursController, "HH"),
-                const SizedBox(width: 10),
-                _timeField(minutesController, "MM"),
-                const SizedBox(width: 10),
-                _timeField(secondsController, "SS"),
+                TimeAdjusterColumn(
+                  label: 'H',
+                  mode: AdjusterMode.increment,
+                  onPressed: () => engine.addHours(1),
+                ),
+                const SizedBox(width: 20),
+                TimeAdjusterColumn(
+                  label: 'M',
+                  mode: AdjusterMode.increment,
+                  onPressed: () => engine.addMinutes(1),
+                ),
+                const SizedBox(width: 20),
+                TimeAdjusterColumn(
+                  label: 'S',
+                  mode: AdjusterMode.increment,
+                  onPressed: () => engine.addSeconds(1),
+                ),
               ],
             ),
-            const SizedBox(height: 30),
 
+            const SizedBox(height: 20),
+
+            // CONTADOR + BOTÓN +10s
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                TimerDisplay(time: engine.formattedTime),
+                const SizedBox(width: 12),
+                IconButton(
+                  onPressed: () => engine.addSeconds(10),
+                  icon: const Icon(Icons.add_circle_outline),
+                  tooltip: '+10s',
+                ),
+              ],
+            ),
+            const SizedBox(height: 40),
+            // - - -
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                ElevatedButton(onPressed: startTimer, child: const Text("Start")),
-                const SizedBox(width: 10),
-                ElevatedButton(onPressed: pauseTimer, child: const Text("Pause")),
-                const SizedBox(width: 10),
-                ElevatedButton(onPressed: resetTimer, child: const Text("Reset")),
+                TimeAdjusterColumn(
+                  label: 'H',
+                  mode: AdjusterMode.decrement,
+                  onPressed: () => engine.addHours(-1),
+                ),
+                const SizedBox(width: 20),
+                TimeAdjusterColumn(
+                  label: 'M',
+                  mode: AdjusterMode.decrement,
+                  onPressed: () => engine.addMinutes(-1),
+                ),
+                const SizedBox(width: 20),
+                TimeAdjusterColumn(
+                  label: 'S',
+                  mode: AdjusterMode.decrement,
+                  onPressed: () => engine.addSeconds(-1),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 40),
+
+            // BOTONES CONTROL
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                ElevatedButton(
+                  onPressed: engine.start,
+                  child: const Text('Start'),
+                ),
+                const SizedBox(width: 16),
+                ElevatedButton(
+                  onPressed: engine.pause,
+                  child: const Text('Pause'),
+                ),
+                const SizedBox(width: 16),
+                ElevatedButton(
+                  onPressed: engine.reset,
+                  child: const Text('Reset'),
+                ),
               ],
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _timeField(TextEditingController controller, String label) {
-    return SizedBox(
-      width: 70,
-      child: TextField(
-        controller: controller,
-        keyboardType: TextInputType.number,
-        decoration: InputDecoration(labelText: label),
       ),
     );
   }

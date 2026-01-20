@@ -1,44 +1,93 @@
+import 'dart:async';
+import 'package:flutter/foundation.dart';
+
 class TimerEngine {
-  int hours;
-  int minutes;
-  int seconds;
+  final VoidCallback onTick;
 
-  int remainingSeconds;
-  bool isRunning = false;
+  Timer? _timer;
+  Duration _current = Duration.zero;
+  bool _isRunning = false;
 
-  TimerEngine({
-    required this.hours,
-    required this.minutes,
-    required this.seconds,
-  }) : remainingSeconds = _toSeconds(hours, minutes, seconds);
+  TimerEngine({required this.onTick});
 
-  static int _toSeconds(int h, int m, int s) {
-    return (h * 3600) + (m * 60) + s;
+  // =========================
+  // GETTERS
+  // =========================
+
+  String get formattedTime {
+    final hours = _current.inHours.toString().padLeft(2, '0');
+    final minutes = (_current.inMinutes % 60).toString().padLeft(2, '0');
+    final seconds = (_current.inSeconds % 60).toString().padLeft(2, '0');
+    return '$hours:$minutes:$seconds';
   }
 
+  bool get isRunning => _isRunning;
+
+  // =========================
+  // CONTROLES PRINCIPALES
+  // =========================
+
   void start() {
-    isRunning = true;
+    if (_isRunning || _current.inSeconds <= 0) return;
+
+    _isRunning = true;
+
+    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (_current.inSeconds <= 0) {
+        pause();
+        return;
+      }
+
+      _current -= const Duration(seconds: 1);
+      onTick();
+    });
   }
 
   void pause() {
-    isRunning = false;
+    _timer?.cancel();
+    _isRunning = false;
+    onTick();
   }
 
   void reset() {
-    remainingSeconds = _toSeconds(hours, minutes, seconds);
-    isRunning = false;
+    pause();
+    _current = Duration.zero;
+    onTick();
   }
 
-  void tick() {
-    if (!isRunning) return;
-    if (remainingSeconds > 0) {
-      remainingSeconds--;
-    }
+  // =========================
+  // AJUSTE DE TIEMPO
+  // =========================
+
+  void addHours(int value) {
+    _updateTime(Duration(hours: value));
   }
 
-  bool get isFinished => remainingSeconds == 0;
+  void addMinutes(int value) {
+    _updateTime(Duration(minutes: value));
+  }
 
-  int get displayHours => remainingSeconds ~/ 3600;
-  int get displayMinutes => (remainingSeconds % 3600) ~/ 60;
-  int get displaySeconds => remainingSeconds % 60;
+  void addSeconds(int value) {
+    _updateTime(Duration(seconds: value));
+  }
+
+  void _updateTime(Duration delta) {
+    if (_isRunning) return; // no permitir edición mientras corre
+
+    final newTime = _current + delta;
+
+    // Evita valores negativos
+    if (newTime.inSeconds < 0) return;
+
+    _current = newTime;
+    onTick();
+  }
+
+  // =========================
+  // CLEANUP
+  // =========================
+
+  void dispose() {
+    _timer?.cancel();
+  }
 }
