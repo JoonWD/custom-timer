@@ -5,7 +5,10 @@ class TimerEngine {
   final VoidCallback onTick;
 
   Timer? _timer;
-  Duration _current = Duration.zero;
+
+  Duration _currentDuration = Duration.zero;
+  Duration _initialDuration = Duration.zero;
+
   bool _isRunning = false;
 
   TimerEngine({required this.onTick});
@@ -15,9 +18,12 @@ class TimerEngine {
   // =========================
 
   String get formattedTime {
-    final hours = _current.inHours.toString().padLeft(2, '0');
-    final minutes = (_current.inMinutes % 60).toString().padLeft(2, '0');
-    final seconds = (_current.inSeconds % 60).toString().padLeft(2, '0');
+    final hours = _currentDuration.inHours.toString().padLeft(2, '0');
+    final minutes =
+        (_currentDuration.inMinutes % 60).toString().padLeft(2, '0');
+    final seconds =
+        (_currentDuration.inSeconds % 60).toString().padLeft(2, '0');
+
     return '$hours:$minutes:$seconds';
   }
 
@@ -28,17 +34,20 @@ class TimerEngine {
   // =========================
 
   void start() {
-    if (_isRunning || _current.inSeconds <= 0) return;
+    if (_isRunning || _currentDuration.inSeconds <= 0) return;
+
+    // Guardamos el tiempo base antes de iniciar
+    _initialDuration = _currentDuration;
 
     _isRunning = true;
 
     _timer = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (_current.inSeconds <= 0) {
+      if (_currentDuration.inSeconds <= 0) {
         pause();
         return;
       }
 
-      _current -= const Duration(seconds: 1);
+      _currentDuration -= const Duration(seconds: 1);
       onTick();
     });
   }
@@ -51,7 +60,7 @@ class TimerEngine {
 
   void reset() {
     pause();
-    _current = Duration.zero;
+    _currentDuration = _initialDuration;
     onTick();
   }
 
@@ -59,27 +68,39 @@ class TimerEngine {
   // AJUSTE DE TIEMPO
   // =========================
 
-  void addHours(int value) {
-    _updateTime(Duration(hours: value));
+  void addSeconds(int value) {
+    if (_isRunning) return;
+
+    _currentDuration += Duration(seconds: value);
+    if (_currentDuration.isNegative) {
+      _currentDuration = Duration.zero;
+    }
+
+    _initialDuration = _currentDuration;
+    onTick();
   }
 
   void addMinutes(int value) {
-    _updateTime(Duration(minutes: value));
+    if (_isRunning) return;
+
+    _currentDuration += Duration(minutes: value);
+    if (_currentDuration.isNegative) {
+      _currentDuration = Duration.zero;
+    }
+
+    _initialDuration = _currentDuration;
+    onTick();
   }
 
-  void addSeconds(int value) {
-    _updateTime(Duration(seconds: value));
-  }
+  void addHours(int value) {
+    if (_isRunning) return;
 
-  void _updateTime(Duration delta) {
-    if (_isRunning) return; // no permitir edición mientras corre
+    _currentDuration += Duration(hours: value);
+    if (_currentDuration.isNegative) {
+      _currentDuration = Duration.zero;
+    }
 
-    final newTime = _current + delta;
-
-    // Evita valores negativos
-    if (newTime.inSeconds < 0) return;
-
-    _current = newTime;
+    _initialDuration = _currentDuration;
     onTick();
   }
 
