@@ -19,19 +19,19 @@ class TimeAdjusterColumn extends StatelessWidget {
     final theme = Theme.of(context);
 
     final icon = mode == AdjusterMode.increment
-        ? Icons.add
-        : Icons.remove;
+        ? Icons.keyboard_arrow_up
+        : Icons.keyboard_arrow_down;
 
     final tooltip = mode == AdjusterMode.increment
-        ? 'Increment $label'
-        : 'Decrement $label';
+        ? '+ $label'
+        : '- $label';
 
     return Column(
       children: [
         IconButton(
           onPressed: onPressed,
           icon: Icon(icon),
-          iconSize: 30,
+          iconSize: 32,
           splashRadius: 22,
           color: theme.colorScheme.primary,
           tooltip: tooltip,

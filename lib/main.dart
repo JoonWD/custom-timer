@@ -37,10 +37,11 @@ class TimerApp extends StatelessWidget {
           seedColor: Color(0xFF2EE59D), // verde esmeralda moderno
           brightness: Brightness.dark,
         ),
-        scaffoldBackgroundColor: const Color(0xFF121212),
+        scaffoldBackgroundColor: const Color.fromARGB(255, 27, 27, 27),
         appBarTheme: const AppBarTheme(
           centerTitle: true,
           elevation: 0,
+          backgroundColor: Colors.transparent,
         ),
       ),
 

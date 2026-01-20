@@ -80,13 +80,19 @@ class _HomeScreenState extends State<HomeScreen> {
                       decoration: BoxDecoration(
                         color: Theme.of(
                           context,
-                        ).colorScheme.primary.withOpacity(0.12),
-                        borderRadius: BorderRadius.circular(12),
+                        ).colorScheme.primary.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(18),
                       ),
                       child: IconButton(
                         onPressed: () => engine.addSeconds(10),
-                        icon: const Icon(Icons.add),
-                        tooltip: '+10s',
+                        icon: Text(
+                          '+10s',
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.primary,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        tooltip: 'agregar 10s',
                       ),
                     ),
                   ),
