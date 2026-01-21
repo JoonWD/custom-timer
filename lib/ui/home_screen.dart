@@ -128,34 +128,50 @@ class _HomeScreenState extends State<HomeScreen> {
             const SizedBox(height: 32),
 
             // BOTONES CONTROL mejorados visualmente
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                OutlinedButton(
-                  onPressed: engine.start,
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.greenAccent.shade400,
-                  ),
-                  child: const Icon(Icons.play_arrow),
+            // BOTONES CONTROL dinámicos según estado
+            if (!engine.hasStarted)
+              OutlinedButton(
+                onPressed: engine.start,
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Colors.greenAccent.shade400,
                 ),
-                const SizedBox(width: 16),
-                OutlinedButton(
-                  onPressed: engine.pause,
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.blueAccent,
+                child: const Icon(Icons.play_arrow),
+              )
+            else
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  OutlinedButton(
+                    onPressed: () {
+                      if (!engine.hasStarted) {
+                        engine.start(); // Start
+                      } else if (engine.isRunning) {
+                        engine.pause(); // Pause
+                      } else {
+                        engine.start(); // Resume
+                      }
+                    },
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: engine.isRunning
+                          ? Colors
+                                .blueAccent // Pause → azul
+                          : Colors.greenAccent, // Start / Resume → verde
+                    ),
+                    child: Icon(
+                      engine.isRunning ? Icons.pause : Icons.play_arrow,
+                    ),
                   ),
-                  child: const Icon(Icons.pause),
-                ),
-                const SizedBox(width: 16),
-                OutlinedButton(
-                  onPressed: engine.reset,
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.redAccent,
+
+                  const SizedBox(width: 16),
+                  OutlinedButton(
+                    onPressed: engine.reset,
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.redAccent,
+                    ),
+                    child: const Icon(Icons.restart_alt),
                   ),
-                  child: const Icon(Icons.restart_alt),
-                ),
-              ],
-            ),
+                ],
+              ),
           ],
         ),
       ),

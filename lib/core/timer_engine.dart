@@ -11,6 +11,11 @@ class TimerEngine {
 
   bool _isRunning = false;
 
+  bool _hasStarted = false;
+
+  bool get hasStarted => _hasStarted;
+
+
   TimerEngine({required this.onTick});
 
   // =========================
@@ -33,24 +38,23 @@ class TimerEngine {
   // CONTROLES PRINCIPALES
   // =========================
 
-  void start() {
-    if (_isRunning || _currentDuration.inSeconds <= 0) return;
+void start() {
+  if (_isRunning || _currentDuration.inSeconds <= 0) return;
 
-    // Guardamos el tiempo base antes de iniciar
-    _initialDuration = _currentDuration;
+  _hasStarted = true;
+  _isRunning = true;
 
-    _isRunning = true;
+  _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+    if (_currentDuration.inSeconds <= 0) {
+      pause();
+      return;
+    }
 
-    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (_currentDuration.inSeconds <= 0) {
-        pause();
-        return;
-      }
+    _currentDuration -= const Duration(seconds: 1);
+    onTick();
+  });
+}
 
-      _currentDuration -= const Duration(seconds: 1);
-      onTick();
-    });
-  }
 
   void pause() {
     _timer?.cancel();
@@ -58,11 +62,13 @@ class TimerEngine {
     onTick();
   }
 
-  void reset() {
-    pause();
-    _currentDuration = _initialDuration;
-    onTick();
-  }
+ void reset() {
+  pause();
+  _currentDuration = _initialDuration;
+  _hasStarted = false; // ← clave
+  onTick();
+}
+
 
   // =========================
   // AJUSTE DE TIEMPO
