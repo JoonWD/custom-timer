@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import '../core/timer_engine.dart';
 import '../widgets/timer_display.dart';
@@ -30,10 +29,75 @@ class _HomeScreenState extends State<HomeScreen> {
     super.dispose();
   }
 
+  // =========================
+  // BOTONES DINÁMICOS
+  // =========================
+  Widget _buildControls() {
+    // Estado inicial → solo Play
+    if (!engine.isRunning && engine.currentDuration == Duration.zero) {
+      return OutlinedButton(
+        onPressed: engine.start,
+        style: OutlinedButton.styleFrom(
+          foregroundColor: Colors.greenAccent.shade400,
+        ),
+        child: const Icon(Icons.play_arrow),
+      );
+    }
+
+    // Estado pausado → Play (reanudar) + Reset
+    if (!engine.isRunning && engine.currentDuration > Duration.zero) {
+      return Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          OutlinedButton(
+            onPressed: engine.start,
+            style: OutlinedButton.styleFrom(
+              foregroundColor: Colors.greenAccent.shade400,
+            ),
+            child: const Icon(Icons.play_arrow),
+          ),
+          const SizedBox(width: 16),
+          OutlinedButton(
+            onPressed: engine.reset,
+            style: OutlinedButton.styleFrom(
+              foregroundColor: Colors.redAccent,
+            ),
+            child: const Icon(Icons.restart_alt),
+          ),
+        ],
+      );
+    }
+
+    // Estado corriendo → Pause + Reset
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        OutlinedButton(
+          onPressed: engine.pause,
+          style: OutlinedButton.styleFrom(
+            foregroundColor: Colors.blueAccent,
+          ),
+          child: const Icon(Icons.pause),
+        ),
+        const SizedBox(width: 16),
+        OutlinedButton(
+          onPressed: engine.reset,
+          style: OutlinedButton.styleFrom(
+            foregroundColor: Colors.redAccent,
+          ),
+          child: const Icon(Icons.restart_alt),
+        ),
+      ],
+    );
+  }
+
+  // =========================
+  // UI PRINCIPAL
+  // =========================
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Custom Timer'), centerTitle: true),
+      appBar: AppBar(title: const Text('Custom Timer')),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -63,24 +127,23 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
 
             const SizedBox(height: 12),
-            // CONTADOR +10s integrado
+
+            // CONTADOR +10s centrado correctamente
             SizedBox(
-              width:
-                  360, // puedes ajustar según te guste más ancho o más compacto
+              width: 360,
               child: Stack(
                 alignment: Alignment.center,
                 children: [
-                  // Contador perfectamente centrado
                   TimerDisplay(time: engine.formattedTime),
 
-                  // Botón +10s flotante a la derecha
                   Positioned(
                     right: 0,
                     child: Container(
                       decoration: BoxDecoration(
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.primary.withOpacity(0.1),
+                        color: Theme.of(context)
+                            .colorScheme
+                            .primary
+                            .withOpacity(0.1),
                         borderRadius: BorderRadius.circular(18),
                       ),
                       child: IconButton(
@@ -101,6 +164,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
 
             const SizedBox(height: 12),
+
             // - - -
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -127,51 +191,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
             const SizedBox(height: 32),
 
-            // BOTONES CONTROL mejorados visualmente
-            // BOTONES CONTROL dinámicos según estado
-            if (!engine.hasStarted)
-              OutlinedButton(
-                onPressed: engine.start,
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: Colors.greenAccent.shade400,
-                ),
-                child: const Icon(Icons.play_arrow),
-              )
-            else
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  OutlinedButton(
-                    onPressed: () {
-                      if (!engine.hasStarted) {
-                        engine.start(); // Start
-                      } else if (engine.isRunning) {
-                        engine.pause(); // Pause
-                      } else {
-                        engine.start(); // Resume
-                      }
-                    },
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: engine.isRunning
-                          ? Colors
-                                .blueAccent // Pause → azul
-                          : Colors.greenAccent, // Start / Resume → verde
-                    ),
-                    child: Icon(
-                      engine.isRunning ? Icons.pause : Icons.play_arrow,
-                    ),
-                  ),
-
-                  const SizedBox(width: 16),
-                  OutlinedButton(
-                    onPressed: engine.reset,
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.redAccent,
-                    ),
-                    child: const Icon(Icons.restart_alt),
-                  ),
-                ],
-              ),
+            // BOTONES DINÁMICOS
+            _buildControls(),
           ],
         ),
       ),

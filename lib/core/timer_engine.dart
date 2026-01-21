@@ -8,12 +8,12 @@ class TimerEngine {
 
   Duration _currentDuration = Duration.zero;
   Duration _initialDuration = Duration.zero;
+  Duration get currentDuration => _currentDuration;
 
   bool _isRunning = false;
-
   bool _hasStarted = false;
-
   bool get hasStarted => _hasStarted;
+  bool get isPaused => !_isRunning && _currentDuration > Duration.zero;
 
 
   TimerEngine({required this.onTick});
