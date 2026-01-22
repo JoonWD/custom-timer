@@ -9,6 +9,8 @@ class TimerEngine {
   Duration _currentDuration = Duration.zero;
   Duration _initialDuration = Duration.zero;
   Duration get currentDuration => _currentDuration;
+  Duration get initialDuration => _initialDuration;
+
 
   bool _isRunning = false;
   bool _hasStarted = false;

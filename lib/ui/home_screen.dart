@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../core/timer_engine.dart';
 import '../widgets/timer_display.dart';
 import '../widgets/time_adjuster_column.dart';
+import '../widgets/circular_timer.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -195,12 +196,16 @@ class _HomeScreenState extends State<HomeScreen> {
       ],
     );
   }
+
   Widget _buildRunningView() {
     return Column(
       key: const ValueKey('running'),
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        TimerDisplay(time: engine.formattedTime),
+        CircularTimer(
+          current: engine.currentDuration,
+          total: engine.initialDuration,
+        ),
         const SizedBox(height: 32),
         _buildControls(),
       ],
