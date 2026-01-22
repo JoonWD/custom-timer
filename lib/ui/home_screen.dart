@@ -14,16 +14,10 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   late final TimerEngine engine;
 
-  bool get isEditing => !engine.isRunning;
-
   @override
   void initState() {
     super.initState();
-    engine = TimerEngine(
-      onTick: () {
-        setState(() {});
-      },
-    );
+    engine = TimerEngine(onTick: () => setState(() {}));
   }
 
   @override
@@ -33,29 +27,52 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   // =========================
-  // BOTONES DINÁMICOS
+  // CONTROLES DINÁMICOS
   // =========================
+
   Widget _buildControls() {
-    // Estado inicial → solo Play
-    if (!engine.isRunning && engine.currentDuration == Duration.zero) {
+    // Finished → solo botón Stop
+    if (engine.isFinished) {
       return OutlinedButton(
-        onPressed: engine.start,
+        onPressed: engine.stop,
         style: OutlinedButton.styleFrom(
-          foregroundColor: Colors.greenAccent.shade400,
+          foregroundColor: Colors.redAccent,
+          shape: const CircleBorder(),
+          padding: const EdgeInsets.all(22),
         ),
-        child: const Icon(Icons.play_arrow),
+        child: const Icon(Icons.stop),
       );
     }
 
-    // Estado pausado → Play (reanudar) + Reset
-    if (!engine.isRunning && engine.currentDuration > Duration.zero) {
+    // Running → Pause + Reset
+    if (engine.isRunning) {
+      return Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          OutlinedButton(
+            onPressed: engine.pause,
+            style: OutlinedButton.styleFrom(foregroundColor: Colors.blueAccent),
+            child: const Icon(Icons.pause),
+          ),
+          const SizedBox(width: 16),
+          OutlinedButton(
+            onPressed: engine.reset,
+            style: OutlinedButton.styleFrom(foregroundColor: Colors.redAccent),
+            child: const Icon(Icons.restart_alt),
+          ),
+        ],
+      );
+    }
+
+    // Paused → Resume + Reset
+    if (engine.isPaused) {
       return Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           OutlinedButton(
             onPressed: engine.start,
             style: OutlinedButton.styleFrom(
-              foregroundColor: Colors.greenAccent.shade400,
+              foregroundColor: Colors.greenAccent,
             ),
             child: const Icon(Icons.play_arrow),
           ),
@@ -69,30 +86,23 @@ class _HomeScreenState extends State<HomeScreen> {
       );
     }
 
-    // Estado corriendo → Pause + Reset
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        OutlinedButton(
-          onPressed: engine.pause,
-          style: OutlinedButton.styleFrom(foregroundColor: Colors.blueAccent),
-          child: const Icon(Icons.pause),
-        ),
-        const SizedBox(width: 16),
-        OutlinedButton(
-          onPressed: engine.reset,
-          style: OutlinedButton.styleFrom(foregroundColor: Colors.redAccent),
-          child: const Icon(Icons.restart_alt),
-        ),
-      ],
+    // Idle → solo Play
+    return OutlinedButton(
+      onPressed: engine.start,
+      style: OutlinedButton.styleFrom(foregroundColor: Colors.greenAccent),
+      child: const Icon(Icons.play_arrow),
     );
   }
 
   // =========================
   // UI PRINCIPAL
   // =========================
+
   @override
   Widget build(BuildContext context) {
+    final bool showRunningView =
+        engine.isRunning || engine.isPaused || engine.isFinished;
+
     return Scaffold(
       appBar: AppBar(title: const Text('Custom Timer')),
       body: Center(
@@ -104,11 +114,15 @@ class _HomeScreenState extends State<HomeScreen> {
               child: ScaleTransition(scale: animation, child: child),
             );
           },
-          child: isEditing ? _buildEditView() : _buildRunningView(),
+          child: showRunningView ? _buildRunningView() : _buildEditView(),
         ),
       ),
     );
   }
+
+  // =========================
+  // EDIT VIEW
+  // =========================
 
   Widget _buildEditView() {
     return Column(
@@ -197,6 +211,10 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  // =========================
+  // RUNNING VIEW
+  // =========================
+
   Widget _buildRunningView() {
     return Column(
       key: const ValueKey('running'),
@@ -205,7 +223,9 @@ class _HomeScreenState extends State<HomeScreen> {
         CircularTimer(
           current: engine.currentDuration,
           total: engine.initialDuration,
+          isRunning: engine.isRunning,
         ),
+
         const SizedBox(height: 32),
         _buildControls(),
       ],

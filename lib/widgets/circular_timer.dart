@@ -5,11 +5,13 @@ import 'package:flutter/scheduler.dart';
 class CircularTimer extends StatefulWidget {
   final Duration current;
   final Duration total;
+  final bool isRunning;
 
   const CircularTimer({
     super.key,
     required this.current,
     required this.total,
+    required this.isRunning,
   });
 
   @override
@@ -31,20 +33,23 @@ class _CircularTimerState extends State<CircularTimer>
     _lastTickTime = DateTime.now();
 
     _ticker = createTicker((_) {
+      if (!widget.isRunning) return;
       if (widget.total.inMilliseconds == 0) return;
 
       final elapsed =
           DateTime.now().difference(_lastTickTime).inMilliseconds;
 
-      final realRemaining =
-          (_lastReported.inMilliseconds - elapsed).clamp(0, widget.total.inMilliseconds);
+      final realRemaining = (_lastReported.inMilliseconds - elapsed)
+          .clamp(0, widget.total.inMilliseconds);
 
       setState(() {
         _visualProgress = realRemaining / widget.total.inMilliseconds;
       });
     });
 
-    _ticker.start();
+    if (widget.isRunning) {
+      _ticker.start();
+    }
   }
 
   @override
@@ -54,6 +59,15 @@ class _CircularTimerState extends State<CircularTimer>
     if (widget.current != oldWidget.current) {
       _lastReported = widget.current;
       _lastTickTime = DateTime.now();
+    }
+
+    if (widget.isRunning && !_ticker.isActive) {
+      _lastTickTime = DateTime.now();
+      _ticker.start();
+    }
+
+    if (!widget.isRunning && _ticker.isActive) {
+      _ticker.stop();
     }
   }
 
@@ -138,9 +152,10 @@ class _CirclePainter extends CustomPainter {
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
 
-    // Base
+    // Fondo
     canvas.drawCircle(center, radius, backgroundPaint);
 
+    // Glow
     if (progress > 0) {
       canvas.drawArc(
         Rect.fromCircle(center: center, radius: radius),
@@ -151,6 +166,7 @@ class _CirclePainter extends CustomPainter {
       );
     }
 
+    // Progreso principal
     canvas.drawArc(
       Rect.fromCircle(center: center, radius: radius),
       -pi / 2,
@@ -161,5 +177,8 @@ class _CirclePainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
+  bool shouldRepaint(covariant _CirclePainter oldDelegate) {
+    return oldDelegate.progress != progress ||
+        oldDelegate.color != color;
+  }
 }

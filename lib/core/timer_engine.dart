@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 
+enum TimerStatus { idle, running, paused, finished }
+
 class TimerEngine {
   final VoidCallback onTick;
 
@@ -8,20 +10,25 @@ class TimerEngine {
 
   Duration _currentDuration = Duration.zero;
   Duration _initialDuration = Duration.zero;
+
   Duration get currentDuration => _currentDuration;
   Duration get initialDuration => _initialDuration;
 
+  TimerStatus _status = TimerStatus.idle;
 
-  bool _isRunning = false;
-  bool _hasStarted = false;
-  bool get hasStarted => _hasStarted;
-  bool get isPaused => !_isRunning && _currentDuration > Duration.zero;
+  // =========================
+  // GETTERS DE ESTADO
+  // =========================
 
+  bool get isRunning => _status == TimerStatus.running;
+  bool get isPaused => _status == TimerStatus.paused;
+  bool get isIdle => _status == TimerStatus.idle;
+  bool get isFinished => _status == TimerStatus.finished;
 
   TimerEngine({required this.onTick});
 
   // =========================
-  // GETTERS
+  // FORMATO DE TIEMPO
   // =========================
 
   String get formattedTime {
@@ -30,83 +37,95 @@ class TimerEngine {
         (_currentDuration.inMinutes % 60).toString().padLeft(2, '0');
     final seconds =
         (_currentDuration.inSeconds % 60).toString().padLeft(2, '0');
-
     return '$hours:$minutes:$seconds';
   }
 
-  bool get isRunning => _isRunning;
-
   // =========================
-  // CONTROLES PRINCIPALES
+  // CONTROLES
   // =========================
 
-void start() {
-  if (_isRunning || _currentDuration.inSeconds <= 0) return;
+  void start() {
+    if (_status == TimerStatus.running) return;
+    if (_currentDuration.inSeconds <= 0) return;
 
-  _hasStarted = true;
-  _isRunning = true;
+    _status = TimerStatus.running;
 
-  _timer = Timer.periodic(const Duration(seconds: 1), (_) {
-    if (_currentDuration.inSeconds <= 0) {
-      pause();
-      return;
-    }
-
-    _currentDuration -= const Duration(seconds: 1);
-    onTick();
-  });
-}
-
-
-  void pause() {
     _timer?.cancel();
-    _isRunning = false;
+    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (_currentDuration.inSeconds <= 1) {
+        _finish();
+        return;
+      }
+
+      _currentDuration -= const Duration(seconds: 1);
+      onTick();
+    });
+
     onTick();
   }
 
- void reset() {
-  pause();
-  _currentDuration = _initialDuration;
-  _hasStarted = false; // ← clave
-  onTick();
-}
+  void pause() {
+    if (_status != TimerStatus.running) return;
 
+    _timer?.cancel();
+    _status = TimerStatus.paused;
+    onTick();
+  }
+
+  void reset() {
+    if (_status == TimerStatus.idle) return;
+
+    _timer?.cancel();
+    _currentDuration = _initialDuration;
+    _status = TimerStatus.idle;
+    onTick();
+  }
+
+  void stop() {
+    // Se usa solo cuando está finished
+    _timer?.cancel();
+    _currentDuration = Duration.zero;
+    _initialDuration = Duration.zero;
+    _status = TimerStatus.idle;
+    onTick();
+  }
+
+  void _finish() {
+    _timer?.cancel();
+    _currentDuration = Duration.zero;
+    _status = TimerStatus.finished;
+    onTick();
+  }
 
   // =========================
   // AJUSTE DE TIEMPO
   // =========================
 
   void addSeconds(int value) {
-    if (_isRunning) return;
+    if (_status != TimerStatus.idle) return;
 
     _currentDuration += Duration(seconds: value);
-    if (_currentDuration.isNegative) {
-      _currentDuration = Duration.zero;
-    }
+    if (_currentDuration.isNegative) _currentDuration = Duration.zero;
 
     _initialDuration = _currentDuration;
     onTick();
   }
 
   void addMinutes(int value) {
-    if (_isRunning) return;
+    if (_status != TimerStatus.idle) return;
 
     _currentDuration += Duration(minutes: value);
-    if (_currentDuration.isNegative) {
-      _currentDuration = Duration.zero;
-    }
+    if (_currentDuration.isNegative) _currentDuration = Duration.zero;
 
     _initialDuration = _currentDuration;
     onTick();
   }
 
   void addHours(int value) {
-    if (_isRunning) return;
+    if (_status != TimerStatus.idle) return;
 
     _currentDuration += Duration(hours: value);
-    if (_currentDuration.isNegative) {
-      _currentDuration = Duration.zero;
-    }
+    if (_currentDuration.isNegative) _currentDuration = Duration.zero;
 
     _initialDuration = _currentDuration;
     onTick();
