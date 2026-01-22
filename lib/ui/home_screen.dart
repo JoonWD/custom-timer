@@ -13,6 +13,8 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   late final TimerEngine engine;
 
+  bool get isEditing => !engine.isRunning;
+
   @override
   void initState() {
     super.initState();
@@ -59,9 +61,7 @@ class _HomeScreenState extends State<HomeScreen> {
           const SizedBox(width: 16),
           OutlinedButton(
             onPressed: engine.reset,
-            style: OutlinedButton.styleFrom(
-              foregroundColor: Colors.redAccent,
-            ),
+            style: OutlinedButton.styleFrom(foregroundColor: Colors.redAccent),
             child: const Icon(Icons.restart_alt),
           ),
         ],
@@ -74,17 +74,13 @@ class _HomeScreenState extends State<HomeScreen> {
       children: [
         OutlinedButton(
           onPressed: engine.pause,
-          style: OutlinedButton.styleFrom(
-            foregroundColor: Colors.blueAccent,
-          ),
+          style: OutlinedButton.styleFrom(foregroundColor: Colors.blueAccent),
           child: const Icon(Icons.pause),
         ),
         const SizedBox(width: 16),
         OutlinedButton(
           onPressed: engine.reset,
-          style: OutlinedButton.styleFrom(
-            foregroundColor: Colors.redAccent,
-          ),
+          style: OutlinedButton.styleFrom(foregroundColor: Colors.redAccent),
           child: const Icon(Icons.restart_alt),
         ),
       ],
@@ -99,103 +95,115 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text('Custom Timer')),
       body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // + + +
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                TimeAdjusterColumn(
-                  label: 'H',
-                  mode: AdjusterMode.increment,
-                  onPressed: () => engine.addHours(1),
-                ),
-                const SizedBox(width: 24),
-                TimeAdjusterColumn(
-                  label: 'M',
-                  mode: AdjusterMode.increment,
-                  onPressed: () => engine.addMinutes(1),
-                ),
-                const SizedBox(width: 24),
-                TimeAdjusterColumn(
-                  label: 'S',
-                  mode: AdjusterMode.increment,
-                  onPressed: () => engine.addSeconds(1),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 12),
-
-            // CONTADOR +10s centrado correctamente
-            SizedBox(
-              width: 360,
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  TimerDisplay(time: engine.formattedTime),
-
-                  Positioned(
-                    right: 0,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: Theme.of(context)
-                            .colorScheme
-                            .primary
-                            .withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(18),
-                      ),
-                      child: IconButton(
-                        onPressed: () => engine.addSeconds(10),
-                        icon: Text(
-                          '+10s',
-                          style: TextStyle(
-                            color: Theme.of(context).colorScheme.primary,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        tooltip: 'agregar 10s',
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 12),
-
-            // - - -
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                TimeAdjusterColumn(
-                  label: 'H',
-                  mode: AdjusterMode.decrement,
-                  onPressed: () => engine.addHours(-1),
-                ),
-                const SizedBox(width: 24),
-                TimeAdjusterColumn(
-                  label: 'M',
-                  mode: AdjusterMode.decrement,
-                  onPressed: () => engine.addMinutes(-1),
-                ),
-                const SizedBox(width: 24),
-                TimeAdjusterColumn(
-                  label: 'S',
-                  mode: AdjusterMode.decrement,
-                  onPressed: () => engine.addSeconds(-1),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 32),
-
-            // BOTONES DINÁMICOS
-            _buildControls(),
-          ],
+        child: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 350),
+          transitionBuilder: (child, animation) {
+            return FadeTransition(
+              opacity: animation,
+              child: ScaleTransition(scale: animation, child: child),
+            );
+          },
+          child: isEditing ? _buildEditView() : _buildRunningView(),
         ),
       ),
+    );
+  }
+
+  Widget _buildEditView() {
+    return Column(
+      key: const ValueKey('edit'),
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        // + + +
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            TimeAdjusterColumn(
+              label: 'H',
+              mode: AdjusterMode.increment,
+              onPressed: () => engine.addHours(1),
+            ),
+            const SizedBox(width: 24),
+            TimeAdjusterColumn(
+              label: 'M',
+              mode: AdjusterMode.increment,
+              onPressed: () => engine.addMinutes(1),
+            ),
+            const SizedBox(width: 24),
+            TimeAdjusterColumn(
+              label: 'S',
+              mode: AdjusterMode.increment,
+              onPressed: () => engine.addSeconds(1),
+            ),
+          ],
+        ),
+
+        const SizedBox(height: 12),
+
+        SizedBox(
+          width: 360,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              TimerDisplay(time: engine.formattedTime),
+              Positioned(
+                right: 0,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.05),
+                    borderRadius: BorderRadius.circular(18),
+                  ),
+                  child: IconButton(
+                    onPressed: () => engine.addSeconds(10),
+                    icon: const Text('+10s'),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        const SizedBox(height: 12),
+
+        // - - -
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            TimeAdjusterColumn(
+              label: 'H',
+              mode: AdjusterMode.decrement,
+              onPressed: () => engine.addHours(-1),
+            ),
+            const SizedBox(width: 24),
+            TimeAdjusterColumn(
+              label: 'M',
+              mode: AdjusterMode.decrement,
+              onPressed: () => engine.addMinutes(-1),
+            ),
+            const SizedBox(width: 24),
+            TimeAdjusterColumn(
+              label: 'S',
+              mode: AdjusterMode.decrement,
+              onPressed: () => engine.addSeconds(-1),
+            ),
+          ],
+        ),
+
+        const SizedBox(height: 32),
+
+        _buildControls(),
+      ],
+    );
+  }
+  Widget _buildRunningView() {
+    return Column(
+      key: const ValueKey('running'),
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        TimerDisplay(time: engine.formattedTime),
+        const SizedBox(height: 32),
+        _buildControls(),
+      ],
     );
   }
 }
