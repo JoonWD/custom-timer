@@ -126,89 +126,90 @@ class _HomeScreenState extends State<HomeScreen> {
   // EDIT VIEW
   // =========================
 
-  Widget _buildEditView() {
-    return Column(
-      key: const ValueKey('edit'),
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        // + + +
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            TimeAdjusterColumn(
-              label: 'H',
-              mode: AdjusterMode.increment,
-              onPressed: () => engine.addHours(1),
-            ),
-            const SizedBox(width: 24),
-            TimeAdjusterColumn(
-              label: 'M',
-              mode: AdjusterMode.increment,
-              onPressed: () => engine.addMinutes(1),
-            ),
-            const SizedBox(width: 24),
-            TimeAdjusterColumn(
-              label: 'S',
-              mode: AdjusterMode.increment,
-              onPressed: () => engine.addSeconds(1),
-            ),
-          ],
-        ),
-
-        const SizedBox(height: 12),
-
-        SizedBox(
-          width: 360,
-          child: Stack(
-            clipBehavior: Clip.none,
-            alignment: Alignment.center,
-            children: [
-              TimerDisplay(time: engine.formattedTime),
-
-              // Botón flotante +10s bien posicionado
-              Positioned(
-                right: 0,
-                child: QuickAdjustButton(
-                  label: '+10s',
-                  onPressed: () => engine.addSeconds(10),
-                ),
-              ),
-            ],
+Widget _buildEditView() {
+  return Column(
+    key: const ValueKey('edit'),
+    mainAxisAlignment: MainAxisAlignment.center,
+    children: [
+      // + + +
+      Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          TimeAdjusterColumn(
+            label: 'H',
+            mode: AdjusterMode.increment,
+            onPressed: () => engine.addHours(1),
           ),
-        ),
+          const SizedBox(width: 24),
+          TimeAdjusterColumn(
+            label: 'M',
+            mode: AdjusterMode.increment,
+            onPressed: () => engine.addMinutes(1),
+          ),
+          const SizedBox(width: 24),
+          TimeAdjusterColumn(
+            label: 'S',
+            mode: AdjusterMode.increment,
+            onPressed: () => engine.addSeconds(1),
+          ),
+        ],
+      ),
 
-        const SizedBox(height: 12),
+      const SizedBox(height: 12),
 
-        // - - -
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
+      SizedBox(
+        width: 360,
+        child: Stack(
+          clipBehavior: Clip.none,
+          alignment: Alignment.center,
           children: [
-            TimeAdjusterColumn(
-              label: 'H',
-              mode: AdjusterMode.decrement,
-              onPressed: () => engine.addHours(-1),
-            ),
-            const SizedBox(width: 24),
-            TimeAdjusterColumn(
-              label: 'M',
-              mode: AdjusterMode.decrement,
-              onPressed: () => engine.addMinutes(-1),
-            ),
-            const SizedBox(width: 24),
-            TimeAdjusterColumn(
-              label: 'S',
-              mode: AdjusterMode.decrement,
-              onPressed: () => engine.addSeconds(-1),
+            TimerDisplay(time: engine.formattedTime),
+
+            // Botón flotante +10s
+            Positioned(
+              right: 0,
+              child: QuickAdjustButton(
+                label: '+10s',
+                onPressed: () => engine.addSeconds(10),
+              ),
             ),
           ],
         ),
+      ),
 
-        const SizedBox(height: 32),
+      const SizedBox(height: 12),
 
-        _buildControls(),
-      ],
-    );
-  }
+      // - - -
+      Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          TimeAdjusterColumn(
+            label: 'H',
+            mode: AdjusterMode.decrement,
+            onPressed: () => engine.addHours(-1),
+          ),
+          const SizedBox(width: 24),
+          TimeAdjusterColumn(
+            label: 'M',
+            mode: AdjusterMode.decrement,
+            onPressed: () => engine.addMinutes(-1),
+          ),
+          const SizedBox(width: 24),
+          TimeAdjusterColumn(
+            label: 'S',
+            mode: AdjusterMode.decrement,
+            onPressed: () => engine.addSeconds(-1),
+          ),
+        ],
+      ),
+
+      const SizedBox(height: 32),
+
+      _buildControls(),
+    ],
+  );
+}
+
 
   // =========================
   // RUNNING VIEW
