@@ -1,14 +1,11 @@
 import 'package:flutter/material.dart';
+import 'dart:ui';
 
 class DigitWheel extends StatefulWidget {
   final String digit;
   final TextStyle textStyle;
 
-  const DigitWheel({
-    super.key,
-    required this.digit,
-    required this.textStyle,
-  });
+  const DigitWheel({super.key, required this.digit, required this.textStyle});
 
   @override
   State<DigitWheel> createState() => _DigitWheelState();
@@ -43,8 +40,7 @@ class _DigitWheelState extends State<DigitWheel>
       final oldVal = int.tryParse(oldWidget.digit) ?? 0;
       final newVal = int.tryParse(widget.digit) ?? 0;
 
-      final isIncrement = newVal > oldVal ||
-          (oldVal == 9 && newVal == 0);
+      final isIncrement = newVal > oldVal || (oldVal == 9 && newVal == 0);
 
       _oldDigit = oldWidget.digit;
       _configureAnimations(isIncrement: isIncrement);
@@ -60,22 +56,12 @@ class _DigitWheelState extends State<DigitWheel>
     _incoming = Tween<Offset>(
       begin: inBegin,
       end: Offset.zero,
-    ).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: Curves.easeOutCubic,
-      ),
-    );
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
 
     _outgoing = Tween<Offset>(
       begin: Offset.zero,
       end: outEnd,
-    ).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: Curves.easeIn,
-      ),
-    );
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeIn));
   }
 
   @override
@@ -84,52 +70,53 @@ class _DigitWheelState extends State<DigitWheel>
     super.dispose();
   }
 
- @override
-Widget build(BuildContext context) {
-  return SizedBox(
-    width: 27,
-    height: 70,
-    child: ClipRect(
-      child: AnimatedBuilder(
-        animation: _controller,
-        builder: (_, __) {
-          final animating = _controller.isAnimating;
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 27,
+      height: 70,
+      child: ClipRect(
+        child: AnimatedBuilder(
+          animation: _controller,
+          builder: (_, __) {
+            final animating = _controller.isAnimating;
+            final blur = animating ? (1.2 * (1 - _controller.value)) : 0.0;
 
-          return Stack(
-            alignment: Alignment.center,
-            children: [
-              // Dígito saliente solo si hay animación
-              if (animating)
-                SlideTransition(
-                  position: _outgoing,
-                  child: Opacity(
-                    opacity: 1 - _controller.value,
-                    child: Text(
-                      _oldDigit,
-                      style: widget.textStyle,
+            return Stack(
+              alignment: Alignment.center,
+              children: [
+                if (animating)
+                  SlideTransition(
+                    position: _outgoing,
+                    child: Opacity(
+                      opacity: 1 - _controller.value,
+                      child: ImageFiltered(
+                        imageFilter: ImageFilter.blur(
+                          sigmaX: blur,
+                          sigmaY: blur,
+                        ),
+                        child: Text(_oldDigit, style: widget.textStyle),
+                      ),
                     ),
                   ),
-                ),
 
-              // Dígito actual
-              animating
-                  ? SlideTransition(
-                      position: _incoming,
-                      child: Text(
-                        widget.digit,
-                        style: widget.textStyle,
-                      ),
-                    )
-                  : Text(
-                      widget.digit,
-                      style: widget.textStyle,
-                    ),
-            ],
-          );
-        },
+                animating
+                    ? SlideTransition(
+                        position: _incoming,
+                        child: ImageFiltered(
+                          imageFilter: ImageFilter.blur(
+                            sigmaX: blur,
+                            sigmaY: blur,
+                          ),
+                          child: Text(widget.digit, style: widget.textStyle),
+                        ),
+                      )
+                    : Text(widget.digit, style: widget.textStyle),
+              ],
+            );
+          },
+        ),
       ),
-    ),
-  );
-}
-
+    );
+  }
 }
