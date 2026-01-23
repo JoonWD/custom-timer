@@ -40,7 +40,8 @@ class _DigitWheelState extends State<DigitWheel>
       final oldVal = int.tryParse(oldWidget.digit) ?? 0;
       final newVal = int.tryParse(widget.digit) ?? 0;
 
-      final isIncrement = newVal > oldVal || (oldVal == 9 && newVal == 0);
+      final diff = (newVal - oldVal + 10) % 10;
+      final isIncrement = diff <= 5;
 
       _oldDigit = oldWidget.digit;
       _configureAnimations(isIncrement: isIncrement);
