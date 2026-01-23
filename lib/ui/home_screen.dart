@@ -224,6 +224,7 @@ class _HomeScreenState extends State<HomeScreen> {
           current: engine.currentDuration,
           total: engine.initialDuration,
           isRunning: engine.isRunning,
+          isFinished: engine.isFinished,
         ),
 
         const SizedBox(height: 32),
