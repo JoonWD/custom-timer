@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'animated_icon_button.dart';
 
 enum AdjusterMode { increment, decrement }
 
@@ -26,17 +27,13 @@ class TimeAdjusterColumn extends StatelessWidget {
         ? '+ $label'
         : '- $label';
 
-    return Column(
-      children: [
-        IconButton(
-          onPressed: onPressed,
-          icon: Icon(icon),
-          iconSize: 32,
-          splashRadius: 22,
-          color: theme.colorScheme.primary,
-          tooltip: tooltip,
-        ),
-      ],
+    return Tooltip(
+      message: tooltip,
+      child: AnimatedIconButton(
+        icon: icon,
+        color: theme.colorScheme.primary,
+        onPressed: onPressed,
+      ),
     );
   }
 }

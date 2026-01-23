@@ -3,6 +3,8 @@ import '../core/timer_engine.dart';
 import '../widgets/timer_display.dart';
 import '../widgets/time_adjuster_column.dart';
 import '../widgets/circular_timer.dart';
+import '../widgets/animated_action_button.dart';
+import '../widgets/quick_adjust_button.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -33,14 +35,11 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildControls() {
     // Finished → solo botón Stop
     if (engine.isFinished) {
-      return OutlinedButton(
+      return AnimatedActionButton(
+        icon: Icons.stop,
+        foregroundColor: Colors.redAccent,
+        isCircle: true,
         onPressed: engine.stop,
-        style: OutlinedButton.styleFrom(
-          foregroundColor: Colors.redAccent,
-          shape: const CircleBorder(),
-          padding: const EdgeInsets.all(22),
-        ),
-        child: const Icon(Icons.stop),
       );
     }
 
@@ -49,16 +48,18 @@ class _HomeScreenState extends State<HomeScreen> {
       return Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          OutlinedButton(
+          AnimatedActionButton(
+            icon: Icons.pause,
+            foregroundColor: Colors.blueAccent,
+            isCircle: false,
             onPressed: engine.pause,
-            style: OutlinedButton.styleFrom(foregroundColor: Colors.blueAccent),
-            child: const Icon(Icons.pause),
           ),
           const SizedBox(width: 16),
-          OutlinedButton(
+          AnimatedActionButton(
+            icon: Icons.restart_alt,
+            foregroundColor: Colors.redAccent,
+            isCircle: false,
             onPressed: engine.reset,
-            style: OutlinedButton.styleFrom(foregroundColor: Colors.redAccent),
-            child: const Icon(Icons.restart_alt),
           ),
         ],
       );
@@ -69,28 +70,29 @@ class _HomeScreenState extends State<HomeScreen> {
       return Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          OutlinedButton(
+          AnimatedActionButton(
+            icon: Icons.play_arrow,
+            foregroundColor: Colors.greenAccent,
+            isCircle: false,
             onPressed: engine.start,
-            style: OutlinedButton.styleFrom(
-              foregroundColor: Colors.greenAccent,
-            ),
-            child: const Icon(Icons.play_arrow),
           ),
           const SizedBox(width: 16),
-          OutlinedButton(
+          AnimatedActionButton(
+            icon: Icons.restart_alt,
+            foregroundColor: Colors.redAccent,
+            isCircle: false,
             onPressed: engine.reset,
-            style: OutlinedButton.styleFrom(foregroundColor: Colors.redAccent),
-            child: const Icon(Icons.restart_alt),
           ),
         ],
       );
     }
 
     // Idle → solo Play
-    return OutlinedButton(
+    return AnimatedActionButton(
+      icon: Icons.play_arrow,
+      foregroundColor: Colors.greenAccent,
+      isCircle: false,
       onPressed: engine.start,
-      style: OutlinedButton.styleFrom(foregroundColor: Colors.greenAccent),
-      child: const Icon(Icons.play_arrow),
     );
   }
 
@@ -158,20 +160,17 @@ class _HomeScreenState extends State<HomeScreen> {
         SizedBox(
           width: 360,
           child: Stack(
+            clipBehavior: Clip.none,
             alignment: Alignment.center,
             children: [
               TimerDisplay(time: engine.formattedTime),
+
+              // Botón flotante +10s bien posicionado
               Positioned(
                 right: 0,
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.05),
-                    borderRadius: BorderRadius.circular(18),
-                  ),
-                  child: IconButton(
-                    onPressed: () => engine.addSeconds(10),
-                    icon: const Text('+10s'),
-                  ),
+                child: QuickAdjustButton(
+                  label: '+10s',
+                  onPressed: () => engine.addSeconds(10),
                 ),
               ),
             ],
