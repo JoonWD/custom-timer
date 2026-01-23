@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'digit_wheel.dart';
 
 class TimerDisplay extends StatelessWidget {
   final String time;
@@ -11,6 +12,12 @@ class TimerDisplay extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+
+    final textStyle = theme.textTheme.displayMedium?.copyWith(
+      fontWeight: FontWeight.bold,
+      letterSpacing: 2,
+      color: theme.colorScheme.primary,
+    );
 
     return Container(
       padding: const EdgeInsets.symmetric(
@@ -28,14 +35,21 @@ class TimerDisplay extends StatelessWidget {
           ),
         ],
       ),
-      child: Text(
-        time,
-        textAlign: TextAlign.center,
-        style: theme.textTheme.displayMedium?.copyWith(
-          fontWeight: FontWeight.bold,
-          letterSpacing: 2,
-          color: theme.colorScheme.primary,
-        ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: time.split('').map((char) {
+          if (char == ':') {
+            return Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: Text(':', style: textStyle),
+            );
+          }
+
+          return DigitWheel(
+            digit: char,
+            textStyle: textStyle!,
+          );
+        }).toList(),
       ),
     );
   }
