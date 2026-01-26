@@ -30,3 +30,6 @@ flutter:
     - assets/sounds/click.mp3
     - assets/sounds/tick2.mp3
     - assets/sounds/yet.mp3
+    - assets/sounds/successful-ending.mp3
+    - assets/sounds/sound-of-bird.mp3
+    - assets/sounds/vibration-sound.mp3

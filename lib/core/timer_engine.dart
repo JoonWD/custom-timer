@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
+import 'package:audioplayers/audioplayers.dart';
 
 enum TimerStatus { idle, running, paused, finished }
 
@@ -35,8 +36,14 @@ class TimerEngine {
 
   String get formattedTime {
     final hours = _currentDuration.inHours.toString().padLeft(2, '0');
-    final minutes = (_currentDuration.inMinutes % 60).toString().padLeft(2, '0');
-    final seconds = (_currentDuration.inSeconds % 60).toString().padLeft(2, '0');
+    final minutes = (_currentDuration.inMinutes % 60).toString().padLeft(
+      2,
+      '0',
+    );
+    final seconds = (_currentDuration.inSeconds % 60).toString().padLeft(
+      2,
+      '0',
+    );
     return '$hours:$minutes:$seconds';
   }
 
@@ -80,9 +87,12 @@ class TimerEngine {
 
   void stop() {
     _ticker?.cancel();
+    stopAlarm(); // <<< cortamos alarma
+
     _currentDuration = Duration.zero;
     _initialDuration = Duration.zero;
     _status = TimerStatus.idle;
+
     onTick();
   }
 
@@ -90,6 +100,9 @@ class TimerEngine {
     _ticker?.cancel();
     _currentDuration = Duration.zero;
     _status = TimerStatus.finished;
+
+    _startAlarm(); // <<< AQUI arranca la alarma persistente
+
     onTick();
   }
 
@@ -141,5 +154,35 @@ class TimerEngine {
 
   void dispose() {
     _ticker?.cancel();
+    _uiPlayer.dispose();
+    _tickPlayer.dispose();
+    _alarmPlayer.dispose();
+  }
+
+  // === AUDIO PLAYERS ===
+  final AudioPlayer _uiPlayer = AudioPlayer(); // clicks UI
+  final AudioPlayer _tickPlayer =
+      AudioPlayer(); // tick (si luego quieres volver a usarlo)
+  final AudioPlayer _alarmPlayer = AudioPlayer(); // alarma persistente
+
+  bool _alarmPlaying = false;
+
+  String selectedAlarm = 'sounds/successful-ending.mp3';
+
+  Future<void> _startAlarm() async {
+    if (_alarmPlaying) return;
+    _alarmPlaying = true;
+
+    try {
+      await _alarmPlayer.setReleaseMode(ReleaseMode.loop);
+      await _alarmPlayer.play(AssetSource(selectedAlarm), volume: 1.0);
+    } catch (_) {}
+  }
+
+  Future<void> stopAlarm() async {
+    _alarmPlaying = false;
+    try {
+      await _alarmPlayer.stop();
+    } catch (_) {}
   }
 }
