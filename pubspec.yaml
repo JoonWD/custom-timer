@@ -16,6 +16,13 @@ dependencies:
   # 🔊 Reproductor de audio
   audioplayers: ^6.5.1
 
+  # 🕰️ Temporizador
+  shared_preferences: ^2.2.2
+
+  # 📱 Gestión de estado
+  provider: ^6.1.2
+
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

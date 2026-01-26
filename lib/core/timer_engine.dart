@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
-import 'package:audioplayers/audioplayers.dart';
+import '../core/ui_sounds.dart';
 
 enum TimerStatus { idle, running, paused, finished }
 
@@ -56,7 +56,6 @@ class TimerEngine {
     if (_currentDuration <= Duration.zero) return;
 
     _status = TimerStatus.running;
-
     _endTime = DateTime.now().add(_currentDuration);
 
     _ticker?.cancel();
@@ -70,7 +69,7 @@ class TimerEngine {
   void pause() {
     if (_status != TimerStatus.running) return;
 
-    _updateTime(); // congelar con precisión real
+    _updateTime();
     _ticker?.cancel();
     _status = TimerStatus.paused;
     onTick();
@@ -80,6 +79,8 @@ class TimerEngine {
     if (_status == TimerStatus.idle) return;
 
     _ticker?.cancel();
+    UISounds.stopAlarm();
+
     _currentDuration = _initialDuration;
     _status = TimerStatus.idle;
     onTick();
@@ -87,7 +88,7 @@ class TimerEngine {
 
   void stop() {
     _ticker?.cancel();
-    stopAlarm(); // <<< cortamos alarma
+    UISounds.stopAlarm();
 
     _currentDuration = Duration.zero;
     _initialDuration = Duration.zero;
@@ -101,7 +102,7 @@ class TimerEngine {
     _currentDuration = Duration.zero;
     _status = TimerStatus.finished;
 
-    _startAlarm(); // <<< AQUI arranca la alarma persistente
+    UISounds.playAlarmLoop();
 
     onTick();
   }
@@ -121,7 +122,7 @@ class TimerEngine {
   }
 
   // =========================
-  // AJUSTES (solo en idle)
+  // AJUSTES (solo idle)
   // =========================
 
   void addSeconds(int value) {
@@ -154,35 +155,5 @@ class TimerEngine {
 
   void dispose() {
     _ticker?.cancel();
-    _uiPlayer.dispose();
-    _tickPlayer.dispose();
-    _alarmPlayer.dispose();
-  }
-
-  // === AUDIO PLAYERS ===
-  final AudioPlayer _uiPlayer = AudioPlayer(); // clicks UI
-  final AudioPlayer _tickPlayer =
-      AudioPlayer(); // tick (si luego quieres volver a usarlo)
-  final AudioPlayer _alarmPlayer = AudioPlayer(); // alarma persistente
-
-  bool _alarmPlaying = false;
-
-  String selectedAlarm = 'sounds/successful-ending.mp3';
-
-  Future<void> _startAlarm() async {
-    if (_alarmPlaying) return;
-    _alarmPlaying = true;
-
-    try {
-      await _alarmPlayer.setReleaseMode(ReleaseMode.loop);
-      await _alarmPlayer.play(AssetSource(selectedAlarm), volume: 1.0);
-    } catch (_) {}
-  }
-
-  Future<void> stopAlarm() async {
-    _alarmPlaying = false;
-    try {
-      await _alarmPlayer.stop();
-    } catch (_) {}
   }
 }
