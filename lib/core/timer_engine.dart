@@ -63,7 +63,7 @@ class TimerEngine {
   void pause() {
     if (_status != TimerStatus.running) return;
 
-    _updateTime(); // congelamos con precisión real
+    _updateTime(); // congelar con precisión real
     _ticker?.cancel();
     _status = TimerStatus.paused;
     onTick();
@@ -108,7 +108,7 @@ class TimerEngine {
   }
 
   // =========================
-  // AJUSTES
+  // AJUSTES (solo en idle)
   // =========================
 
   void addSeconds(int value) {
@@ -128,7 +128,9 @@ class TimerEngine {
 
   void _applyAdjustment(Duration delta) {
     _currentDuration += delta;
-    if (_currentDuration.isNegative) _currentDuration = Duration.zero;
+    if (_currentDuration.isNegative) {
+      _currentDuration = Duration.zero;
+    }
     _initialDuration = _currentDuration;
     onTick();
   }

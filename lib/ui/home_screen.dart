@@ -5,6 +5,8 @@ import '../widgets/time_adjuster_column.dart';
 import '../widgets/circular_timer.dart';
 import '../widgets/animated_action_button.dart';
 import '../widgets/quick_adjust_button.dart';
+import '../core/ui_sounds.dart';
+
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -39,7 +41,10 @@ class _HomeScreenState extends State<HomeScreen> {
         icon: Icons.stop,
         foregroundColor: Colors.redAccent,
         isCircle: true,
-        onPressed: engine.stop,
+        onPressed: () {
+          engine.stop();
+          UISounds.click();
+        },
       );
     }
 
@@ -52,14 +57,20 @@ class _HomeScreenState extends State<HomeScreen> {
             icon: Icons.pause,
             foregroundColor: Colors.blueAccent,
             isCircle: false,
-            onPressed: engine.pause,
+            onPressed: () {
+              engine.pause();
+              UISounds.click();
+            }
           ),
           const SizedBox(width: 16),
           AnimatedActionButton(
             icon: Icons.restart_alt,
             foregroundColor: Colors.redAccent,
             isCircle: false,
-            onPressed: engine.reset,
+            onPressed: () {
+              engine.reset();
+              UISounds.click();
+            }
           ),
         ],
       );
@@ -74,14 +85,20 @@ class _HomeScreenState extends State<HomeScreen> {
             icon: Icons.play_arrow,
             foregroundColor: Colors.greenAccent,
             isCircle: false,
-            onPressed: engine.start,
+            onPressed: () {
+              engine.start();
+              UISounds.yet();
+            }
           ),
           const SizedBox(width: 16),
           AnimatedActionButton(
             icon: Icons.restart_alt,
             foregroundColor: Colors.redAccent,
             isCircle: false,
-            onPressed: engine.reset,
+            onPressed: () {
+              engine.reset();
+              UISounds.click();
+            }
           ),
         ],
       );
@@ -92,7 +109,10 @@ class _HomeScreenState extends State<HomeScreen> {
       icon: Icons.play_arrow,
       foregroundColor: Colors.greenAccent,
       isCircle: false,
-      onPressed: engine.start,
+      onPressed: () {
+        engine.start();
+        UISounds.yet();
+      }
     );
   }
 
@@ -138,19 +158,28 @@ Widget _buildEditView() {
           TimeAdjusterColumn(
             label: 'H',
             mode: AdjusterMode.increment,
-            onPressed: () => engine.addHours(1),
+            onPressed: () {
+              UISounds.tap();
+              engine.addHours(1);
+            },
           ),
           const SizedBox(width: 24),
           TimeAdjusterColumn(
             label: 'M',
             mode: AdjusterMode.increment,
-            onPressed: () => engine.addMinutes(1),
+            onPressed: () {
+              UISounds.tap();
+              engine.addMinutes(1);
+            },
           ),
           const SizedBox(width: 24),
           TimeAdjusterColumn(
             label: 'S',
             mode: AdjusterMode.increment,
-            onPressed: () => engine.addSeconds(1),
+            onPressed: () {
+              UISounds.tap();
+              engine.addSeconds(1);
+            },
           ),
         ],
       ),
@@ -170,7 +199,10 @@ Widget _buildEditView() {
               right: 0,
               child: QuickAdjustButton(
                 label: '+10s',
-                onPressed: () => engine.addSeconds(10),
+                onPressed: () {
+                  UISounds.tap();
+                  engine.addSeconds(10);
+                },
               ),
             ),
           ],
@@ -186,19 +218,28 @@ Widget _buildEditView() {
           TimeAdjusterColumn(
             label: 'H',
             mode: AdjusterMode.decrement,
-            onPressed: () => engine.addHours(-1),
+            onPressed: () {
+              UISounds.tap();
+              engine.addHours(-1);
+            },
           ),
           const SizedBox(width: 24),
           TimeAdjusterColumn(
             label: 'M',
             mode: AdjusterMode.decrement,
-            onPressed: () => engine.addMinutes(-1),
+            onPressed: () {
+              UISounds.tap();
+              engine.addMinutes(-1);
+            },
           ),
           const SizedBox(width: 24),
           TimeAdjusterColumn(
             label: 'S',
             mode: AdjusterMode.decrement,
-            onPressed: () => engine.addSeconds(-1),
+            onPressed: () {
+              UISounds.tap();
+              engine.addSeconds(-1);
+            },
           ),
         ],
       ),
@@ -209,6 +250,7 @@ Widget _buildEditView() {
     ],
   );
 }
+
 
 
   // =========================
