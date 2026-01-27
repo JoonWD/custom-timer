@@ -1,13 +1,33 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:window_manager/window_manager.dart';
 
 import 'ui/home_screen.dart';
 import 'core/settings_controller.dart';
 
-void main() async {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Cargar settings antes de iniciar la app
+  // =========================
+  // WINDOW CONFIG (DESKTOP)
+  // =========================
+  await windowManager.ensureInitialized();
+
+  WindowOptions windowOptions = const WindowOptions(
+    size: Size(480, 680),      // tamaño inicial
+    minimumSize: Size(400, 600), // tamaño mínimo permitido
+    center: true,
+    title: 'ChronoSync',
+  );
+
+  windowManager.waitUntilReadyToShow(windowOptions, () async {
+    await windowManager.show();
+    await windowManager.focus();
+  });
+
+  // =========================
+  // LOAD SETTINGS
+  // =========================
   final settingsController = SettingsController();
   await settingsController.load();
 
@@ -28,7 +48,7 @@ class TimerApp extends StatelessWidget {
 
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Custom Timer',
+      title: 'ChronoSync',
 
       // 🌞 Tema claro
       theme: ThemeData(
@@ -58,7 +78,6 @@ class TimerApp extends StatelessWidget {
         ),
       ),
 
-      // 🔥 Aquí está la conexión real con Settings
       themeMode: settings.isDarkMode ? ThemeMode.dark : ThemeMode.light,
 
       home: const HomeScreen(),

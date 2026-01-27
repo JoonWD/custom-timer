@@ -22,14 +22,12 @@ class CircularTimer extends StatefulWidget {
 
 class _CircularTimerState extends State<CircularTimer>
     with TickerProviderStateMixin {
-  // ===== Ticker visual suave =====
   late Ticker _ticker;
   late Duration _lastReported;
   late DateTime _lastTickTime;
 
   double _visualProgress = 1.0;
 
-  // ===== Animación collapse =====
   late AnimationController _collapseController;
   late Animation<double> _scale;
   late Animation<double> _opacity;
@@ -39,7 +37,6 @@ class _CircularTimerState extends State<CircularTimer>
   void initState() {
     super.initState();
 
-    // --- Collapse animation ---
     _collapseController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 600),
@@ -61,7 +58,6 @@ class _CircularTimerState extends State<CircularTimer>
       TweenSequenceItem(tween: Tween(begin: 4, end: 0), weight: 1),
     ]).animate(_collapseController);
 
-    // --- Visual ticker ---
     _lastReported = widget.current;
     _lastTickTime = DateTime.now();
 
@@ -69,33 +65,30 @@ class _CircularTimerState extends State<CircularTimer>
       if (!widget.isRunning) return;
       if (widget.total.inMilliseconds == 0) return;
 
-      final elapsed =
-          DateTime.now().difference(_lastTickTime).inMilliseconds;
+      final elapsed = DateTime.now().difference(_lastTickTime).inMilliseconds;
 
-      final realRemaining = (_lastReported.inMilliseconds - elapsed)
-          .clamp(0, widget.total.inMilliseconds);
+      final realRemaining = (_lastReported.inMilliseconds - elapsed).clamp(
+        0,
+        widget.total.inMilliseconds,
+      );
 
       setState(() {
         _visualProgress = realRemaining / widget.total.inMilliseconds;
       });
     });
 
-    if (widget.isRunning) {
-      _ticker.start();
-    }
+    if (widget.isRunning) _ticker.start();
   }
 
   @override
   void didUpdateWidget(covariant CircularTimer oldWidget) {
     super.didUpdateWidget(oldWidget);
 
-    // --- Actualizar progreso cuando cambia el tiempo ---
     if (widget.current != oldWidget.current) {
       _lastReported = widget.current;
       _lastTickTime = DateTime.now();
     }
 
-    // --- Control ticker ---
     if (widget.isRunning && !_ticker.isActive) {
       _lastTickTime = DateTime.now();
       _ticker.start();
@@ -105,15 +98,11 @@ class _CircularTimerState extends State<CircularTimer>
       _ticker.stop();
     }
 
-    // --- Detectar transición a finished ---
     if (!oldWidget.isFinished && widget.isFinished) {
       _collapseController.forward();
-      setState(() {
-        _visualProgress = 0;
-      });
+      setState(() => _visualProgress = 0);
     }
 
-    // --- Si vuelve de finished → reset animación ---
     if (oldWidget.isFinished && !widget.isFinished) {
       _collapseController.reset();
     }
@@ -130,39 +119,55 @@ class _CircularTimerState extends State<CircularTimer>
   Widget build(BuildContext context) {
     final color = Theme.of(context).colorScheme.primary;
 
-    return AnimatedBuilder(
-      animation: _collapseController,
-      builder: (context, child) {
-        return Transform.translate(
-          offset: Offset(_shake.value, 0),
-          child: Transform.scale(
-            scale: _scale.value,
-            child: Opacity(
-              opacity: _opacity.value,
-              child: child,
-            ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final size = min(constraints.maxWidth, 420).clamp(220, 420);
+        final scale = size / 300;
+
+        return AnimatedBuilder(
+          animation: _collapseController,
+          builder: (context, child) {
+            return Transform.translate(
+              offset: Offset(_shake.value * scale, 0),
+              child: Transform.scale(
+                scale: _scale.value,
+                child: Opacity(opacity: _opacity.value, child: child),
+              ),
+            );
+          },
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final shortest = constraints.biggest.shortestSide;
+
+              // Tamaño dinámico con límites seguros
+              final size = shortest.clamp(180.0, 320.0);
+              final scale = size / 260.0; // 260 era tu tamaño base original
+
+              return SizedBox(
+                width: size,
+                height: size,
+                child: CustomPaint(
+                  painter: _CirclePainter(
+                    progress: _visualProgress,
+                    color: color,
+                    isFinished: widget.isFinished,
+                    scale: scale,
+                  ),
+                  child: Center(
+                    child: Text(
+                      _format(widget.current),
+                      style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 32 * scale,
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            },
           ),
         );
       },
-      child: SizedBox(
-        width: 260,
-        height: 260,
-        child: CustomPaint(
-          painter: _CirclePainter(
-            progress: _visualProgress,
-            color: color,
-            isFinished: widget.isFinished,
-          ),
-          child: Center(
-            child: Text(
-              _format(widget.current),
-              style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-            ),
-          ),
-        ),
-      ),
     );
   }
 
@@ -178,11 +183,13 @@ class _CirclePainter extends CustomPainter {
   final double progress;
   final Color color;
   final bool isFinished;
+  final double scale;
 
   _CirclePainter({
     required this.progress,
     required this.color,
     required this.isFinished,
+    required this.scale,
   });
 
   @override
@@ -190,41 +197,38 @@ class _CirclePainter extends CustomPainter {
     final center = size.center(Offset.zero);
     final radius = size.width / 2;
 
+    final baseStroke = 10 * scale;
+    final glowStroke = 18 * scale;
+
     final backgroundPaint = Paint()
       ..color = color.withOpacity(0.08)
-      ..strokeWidth = 12
+      ..strokeWidth = baseStroke
       ..style = PaintingStyle.stroke;
 
     final glowPaint = Paint()
       ..color = color.withOpacity(0.15)
-      ..strokeWidth = 22
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 12)
+      ..strokeWidth = glowStroke
+      ..maskFilter = MaskFilter.blur(BlurStyle.normal, 12 * scale)
       ..style = PaintingStyle.stroke;
 
     final gradient = SweepGradient(
       startAngle: -pi / 2,
       endAngle: 3 * pi / 2,
-      colors: [
-        color.withOpacity(0.3),
-        color,
-        color.withOpacity(0.9),
-      ],
+      colors: [color.withOpacity(0.3), color, color.withOpacity(0.9)],
     );
 
     final progressPaint = Paint()
       ..shader = gradient.createShader(
         Rect.fromCircle(center: center, radius: radius),
       )
-      ..strokeWidth = 12
+      ..strokeWidth = baseStroke
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
 
-    // Fondo
     canvas.drawCircle(center, radius, backgroundPaint);
 
     final eased = Curves.easeOut.transform(progress.clamp(0.0, 1.0));
 
-    // Glow solo si no está terminado
     if (!isFinished && eased > 0.02) {
       canvas.drawArc(
         Rect.fromCircle(center: center, radius: radius),
@@ -235,7 +239,6 @@ class _CirclePainter extends CustomPainter {
       );
     }
 
-    // Progreso
     if (eased > 0) {
       canvas.drawArc(
         Rect.fromCircle(center: center, radius: radius),
@@ -246,11 +249,10 @@ class _CirclePainter extends CustomPainter {
       );
     }
 
-    // Huella visual cuando termina
     if (isFinished) {
       final ghostPaint = Paint()
         ..color = color.withOpacity(0.12)
-        ..strokeWidth = 12
+        ..strokeWidth = baseStroke
         ..style = PaintingStyle.stroke;
 
       canvas.drawCircle(center, radius, ghostPaint);
@@ -261,6 +263,7 @@ class _CirclePainter extends CustomPainter {
   bool shouldRepaint(covariant _CirclePainter oldDelegate) {
     return oldDelegate.progress != progress ||
         oldDelegate.color != color ||
-        oldDelegate.isFinished != isFinished;
+        oldDelegate.isFinished != isFinished ||
+        oldDelegate.scale != scale;
   }
 }

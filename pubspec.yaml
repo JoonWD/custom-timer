@@ -1,4 +1,4 @@
-name: timer_app
+name: ChronoSync
 description: "A new Flutter project."
 publish_to: 'none'
 
@@ -13,14 +13,17 @@ dependencies:
 
   cupertino_icons: ^1.0.8
 
-  # 🔊 Reproductor de audio
+  # 🔊 Audio
   audioplayers: ^6.5.1
 
-  # 🕰️ Temporizador
+  # 💾 Persistencia
   shared_preferences: ^2.2.2
 
-  # 📱 Gestión de estado
+  # 🧠 State management
   provider: ^6.1.2
+
+  # 🪟 Control profesional de ventana desktop
+  window_manager: ^0.3.8
 
 
 dev_dependencies:

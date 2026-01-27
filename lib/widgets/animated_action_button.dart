@@ -15,7 +15,7 @@ class AnimatedActionButton extends StatefulWidget {
     this.child,
     required this.foregroundColor,
     this.isCircle = false,
-  }): assert(icon != null || child != null, 'Debe haber icon o child');
+  }) : assert(icon != null || child != null, 'Debe haber icon o child');
 
   @override
   State<AnimatedActionButton> createState() => _AnimatedActionButtonState();
@@ -23,21 +23,23 @@ class AnimatedActionButton extends StatefulWidget {
 
 class _AnimatedActionButtonState extends State<AnimatedActionButton>
     with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _scaleAnimation;
+  late final AnimationController _controller;
+  late final Animation<double> _scale;
+
+  bool _busy = false;
 
   @override
   void initState() {
     super.initState();
+
     _controller = AnimationController(
-      duration: const Duration(milliseconds: 150),
       vsync: this,
+      duration: const Duration(milliseconds: 110),
     );
 
-    _scaleAnimation = Tween<double>(
-      begin: 1.0,
-      end: 0.85,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
+    _scale = Tween(begin: 1.0, end: 0.9).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic),
+    );
   }
 
   @override
@@ -46,46 +48,49 @@ class _AnimatedActionButtonState extends State<AnimatedActionButton>
     super.dispose();
   }
 
-  //No vemos todas las animaciones. solo pausa pero sin await
-  void _handlePress() {
+  void _handleTap() {
+    if (_busy) return;
+    _busy = true;
+
+    _controller.forward().then((_) {
+      if (!mounted) return;
+      _controller.reverse();
+    });
+
     HapticFeedback.mediumImpact();
     widget.onPressed();
 
-    _controller.forward().then((_) {
-      if (mounted) _controller.reverse();
+    Future.delayed(const Duration(milliseconds: 160), () {
+      _busy = false;
     });
   }
 
-  //Vemos todas las animaciones pero crea muchos awaits
-
-  /*   Future<void> _handlePress() async {
-    await _controller.forward();
-    await _controller.reverse();
-    await HapticFeedback.mediumImpact();
-    widget.onPressed();
-  } */
-
   @override
   Widget build(BuildContext context) {
+    final shape = widget.isCircle
+        ? const CircleBorder()
+        : RoundedRectangleBorder(borderRadius: BorderRadius.circular(14));
+
     return ScaleTransition(
-      scale: _scaleAnimation,
-      child: widget.isCircle
-          ? OutlinedButton(
-              onPressed: _handlePress,
-              style: OutlinedButton.styleFrom(
-                foregroundColor: widget.foregroundColor,
-                shape: const CircleBorder(),
-                padding: const EdgeInsets.all(22),
-              ),
-              child: Icon(widget.icon),
-            )
-          : OutlinedButton(
-              onPressed: _handlePress,
-              style: OutlinedButton.styleFrom(
-                foregroundColor: widget.foregroundColor,
-              ),
-              child: Icon(widget.icon),
-            ),
+      scale: _scale,
+      child: Material(
+        color: Colors.transparent,
+        shape: shape,
+        child: InkWell(
+          customBorder: shape,
+          onTap: _handleTap,
+          child: Padding(
+            padding: widget.isCircle
+                ? const EdgeInsets.all(22)
+                : const EdgeInsets.symmetric(horizontal: 22, vertical: 14),
+            child: widget.child ??
+                Icon(
+                  widget.icon,
+                  color: widget.foregroundColor,
+                ),
+          ),
+        ),
+      ),
     );
   }
 }

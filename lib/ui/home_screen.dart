@@ -6,7 +6,6 @@ import '../widgets/circular_timer.dart';
 import '../widgets/animated_action_button.dart';
 import '../widgets/quick_adjust_button.dart';
 import '../core/ui_sounds.dart';
-import '../core/settings_controller.dart';
 import 'settings_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -18,15 +17,11 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   late final TimerEngine engine;
-  late final SettingsController settings;
 
   @override
   void initState() {
     super.initState();
     engine = TimerEngine(onTick: () => setState(() {}));
-
-    settings = SettingsController();
-    settings.load();
   }
 
   @override
@@ -35,12 +30,7 @@ class _HomeScreenState extends State<HomeScreen> {
     super.dispose();
   }
 
-  // =========================
-  // CONTROLES DINÁMICOS
-  // =========================
-
   Widget _buildControls() {
-    // Finished → solo botón Stop
     if (engine.isFinished) {
       return AnimatedActionButton(
         icon: Icons.stop,
@@ -53,7 +43,6 @@ class _HomeScreenState extends State<HomeScreen> {
       );
     }
 
-    // Running → Pause + Reset
     if (engine.isRunning) {
       return Row(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -61,7 +50,6 @@ class _HomeScreenState extends State<HomeScreen> {
           AnimatedActionButton(
             icon: Icons.pause,
             foregroundColor: Colors.blueAccent,
-            isCircle: false,
             onPressed: () {
               engine.pause();
               UISounds.click();
@@ -71,7 +59,6 @@ class _HomeScreenState extends State<HomeScreen> {
           AnimatedActionButton(
             icon: Icons.restart_alt,
             foregroundColor: Colors.redAccent,
-            isCircle: false,
             onPressed: () {
               engine.reset();
               UISounds.click();
@@ -81,7 +68,6 @@ class _HomeScreenState extends State<HomeScreen> {
       );
     }
 
-    // Paused → Resume + Reset
     if (engine.isPaused) {
       return Row(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -89,7 +75,6 @@ class _HomeScreenState extends State<HomeScreen> {
           AnimatedActionButton(
             icon: Icons.play_arrow,
             foregroundColor: Colors.greenAccent,
-            isCircle: false,
             onPressed: () {
               engine.start();
               UISounds.yet();
@@ -99,7 +84,6 @@ class _HomeScreenState extends State<HomeScreen> {
           AnimatedActionButton(
             icon: Icons.restart_alt,
             foregroundColor: Colors.redAccent,
-            isCircle: false,
             onPressed: () {
               engine.reset();
               UISounds.click();
@@ -109,11 +93,9 @@ class _HomeScreenState extends State<HomeScreen> {
       );
     }
 
-    // Idle → solo Play
     return AnimatedActionButton(
       icon: Icons.play_arrow,
       foregroundColor: Colors.greenAccent,
-      isCircle: false,
       onPressed: () {
         engine.start();
         UISounds.yet();
@@ -121,13 +103,9 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // =========================
-  // UI PRINCIPAL
-  // =========================
-
   @override
   Widget build(BuildContext context) {
-    final bool showRunningView =
+    final showRunningView =
         engine.isRunning || engine.isPaused || engine.isFinished;
 
     return Scaffold(
@@ -146,13 +124,7 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       body: Center(
         child: AnimatedSwitcher(
-          duration: const Duration(milliseconds: 350),
-          transitionBuilder: (child, animation) {
-            return FadeTransition(
-              opacity: animation,
-              child: ScaleTransition(scale: animation, child: child),
-            );
-          },
+          duration: const Duration(milliseconds: 300),
           child: showRunningView ? _buildRunningView() : _buildEditView(),
         ),
       ),
@@ -160,7 +132,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   // =========================
-  // EDIT VIEW
+  // EDIT VIEW — mantiene TimerDisplay + alineación perfecta
   // =========================
 
   Widget _buildEditView() {
@@ -168,103 +140,88 @@ class _HomeScreenState extends State<HomeScreen> {
       key: const ValueKey('edit'),
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        // + + +
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            TimeAdjusterColumn(
-              label: 'H',
-              mode: AdjusterMode.increment,
-              onPressed: () {
-                UISounds.tap();
-                engine.addHours(1);
-              },
-            ),
-            const SizedBox(width: 24),
-            TimeAdjusterColumn(
-              label: 'M',
-              mode: AdjusterMode.increment,
-              onPressed: () {
-                UISounds.tap();
-                engine.addMinutes(1);
-              },
-            ),
-            const SizedBox(width: 24),
-            TimeAdjusterColumn(
-              label: 'S',
-              mode: AdjusterMode.increment,
-              onPressed: () {
-                UISounds.tap();
-                engine.addSeconds(1);
-              },
-            ),
-          ],
-        ),
-
-        const SizedBox(height: 12),
-
         SizedBox(
           width: 360,
-          child: Stack(
-            clipBehavior: Clip.none,
-            alignment: Alignment.center,
+          child: Column(
             children: [
-              TimerDisplay(time: engine.formattedTime),
+              // ↑ Botones arriba perfectamente alineados
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  _incButton('H', () => engine.addHours(1)),
+                  const SizedBox(width: 16),
+                  _incButton('M', () => engine.addMinutes(1)),
+                  const SizedBox(width: 16),
+                  _incButton('S', () => engine.addSeconds(1)),
+                ],
+              ),
 
-              // Botón flotante +10s
-              Positioned(
-                right: 0,
-                child: QuickAdjustButton(
-                  label: '+10s',
-                  onPressed: () {
-                    UISounds.tap();
-                    engine.addSeconds(10);
-                  },
-                ),
+              const SizedBox(height: 8),
+
+              // Timer con +10s flotante
+              Stack(
+                alignment: Alignment.center,
+                children: [
+                  TimerDisplay(time: engine.formattedTime),
+                  Positioned(
+                    right: 0,
+                    child: QuickAdjustButton(
+                      label: '+10s',
+                      onPressed: () {
+                        UISounds.tap();
+                        engine.addSeconds(10);
+                      },
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 8),
+
+              // ↓ Botones abajo perfectamente alineados
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  _decButton('H', () => engine.addHours(-1)),
+                  const SizedBox(width: 16),
+                  _decButton('M', () => engine.addMinutes(-1)),
+                  const SizedBox(width: 16),
+                  _decButton('S', () => engine.addSeconds(-1)),
+                ],
               ),
             ],
           ),
         ),
 
-        const SizedBox(height: 12),
-
-        // - - -
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            TimeAdjusterColumn(
-              label: 'H',
-              mode: AdjusterMode.decrement,
-              onPressed: () {
-                UISounds.tap();
-                engine.addHours(-1);
-              },
-            ),
-            const SizedBox(width: 24),
-            TimeAdjusterColumn(
-              label: 'M',
-              mode: AdjusterMode.decrement,
-              onPressed: () {
-                UISounds.tap();
-                engine.addMinutes(-1);
-              },
-            ),
-            const SizedBox(width: 24),
-            TimeAdjusterColumn(
-              label: 'S',
-              mode: AdjusterMode.decrement,
-              onPressed: () {
-                UISounds.tap();
-                engine.addSeconds(-1);
-              },
-            ),
-          ],
-        ),
-
         const SizedBox(height: 32),
-
         _buildControls(),
       ],
+    );
+  }
+
+  Widget _incButton(String label, VoidCallback onTap) {
+    return Center(
+      child: TimeAdjusterColumn(
+        label: label,
+        mode: AdjusterMode.increment,
+        onPressed: () {
+          UISounds.tap();
+          onTap();
+        },
+      ),
+    );
+  }
+
+  Widget _decButton(String label, VoidCallback onTap) {
+    return Center(
+      child: TimeAdjusterColumn(
+        label: label,
+        mode: AdjusterMode.decrement,
+        onPressed: () {
+          UISounds.tap();
+          onTap();
+        },
+      ),
     );
   }
 
@@ -283,7 +240,6 @@ class _HomeScreenState extends State<HomeScreen> {
           isRunning: engine.isRunning,
           isFinished: engine.isFinished,
         ),
-
         const SizedBox(height: 32),
         _buildControls(),
       ],

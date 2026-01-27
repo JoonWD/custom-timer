@@ -1,16 +1,41 @@
-# timer_app
+# ⏱️ ChronoSync
 
-A new Flutter project.
+ChronoSync es una aplicación de temporizador moderna, ligera y multiplataforma desarrollada en Flutter.  
+Diseñada para ofrecer control preciso del tiempo, experiencia sonora personalizable y una interfaz limpia.
 
-## Getting Started
+## ✨ Características
 
-This project is a starting point for a Flutter application.
+- ⏳ Temporizador con precisión en tiempo real
+- 🔊 Control independiente de volumen:
+  - UI Sounds
+  - Alarm Sounds
+- 🌙 Modo oscuro / claro dinámico
+- 💾 Persistencia de configuración (SharedPreferences)
+- 🎧 Motor de sonido con soporte de loop para alarmas
+- 🖥️ Compatible con:
+  - Windows
+  - Linux
+  - macOS
 
-A few resources to get you started if this is your first Flutter project:
+## 🧠 Enfoque técnico
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+- Flutter (Material 3)
+- Provider (gestión de estado)
+- Audioplayers (motor de sonido)
+- Arquitectura modular:
+  - `core/`
+  - `ui/`
+  - separación clara de lógica y presentación
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## 🚀 Instalación
+
+### Usuarios finales
+Descarga el ejecutable desde la sección **Releases**:
+> https://github.com/TU_USUARIO/chronosync/releases
+
+### Desarrolladores
+```bash
+git clone https://github.com/TU_USUARIO/chronosync.git
+cd chronosync
+flutter pub get
+flutter run
