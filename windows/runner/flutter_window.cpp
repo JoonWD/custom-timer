@@ -16,14 +16,16 @@ bool FlutterWindow::OnCreate() {
 
   RECT frame = GetClientArea();
 
-  // The size here must match the window dimensions to avoid unnecessary surface
-  // creation / destruction in the startup path.
+  // El tamaño aquí debe coincidir con el tamaño de la ventana
   flutter_controller_ = std::make_unique<flutter::FlutterViewController>(
-      frame.right - frame.left, frame.bottom - frame.top, project_);
-  // Ensure that basic setup of the controller was successful.
+      frame.right - frame.left,
+      frame.bottom - frame.top,
+      project_);
+
   if (!flutter_controller_->engine() || !flutter_controller_->view()) {
     return false;
   }
+
   RegisterPlugins(flutter_controller_->engine());
   SetChildContent(flutter_controller_->view()->GetNativeWindow());
 
@@ -31,9 +33,6 @@ bool FlutterWindow::OnCreate() {
     this->Show();
   });
 
-  // Flutter can complete the first frame before the "show window" callback is
-  // registered. The following call ensures a frame is pending to ensure the
-  // window is shown. It is a no-op if the first frame hasn't completed yet.
   flutter_controller_->ForceRedraw();
 
   return true;
@@ -47,21 +46,32 @@ void FlutterWindow::OnDestroy() {
   Win32Window::OnDestroy();
 }
 
-LRESULT
-FlutterWindow::MessageHandler(HWND hwnd, UINT const message,
-                              WPARAM const wparam,
-                              LPARAM const lparam) noexcept {
-  // Give Flutter, including plugins, an opportunity to handle window messages.
+LRESULT FlutterWindow::MessageHandler(HWND hwnd,
+                                      UINT const message,
+                                      WPARAM const wparam,
+                                      LPARAM const lparam) noexcept {
+  // Permitir que Flutter maneje eventos primero
   if (flutter_controller_) {
     std::optional<LRESULT> result =
-        flutter_controller_->HandleTopLevelWindowProc(hwnd, message, wparam,
-                                                      lparam);
+        flutter_controller_->HandleTopLevelWindowProc(hwnd, message, wparam, lparam);
     if (result) {
       return *result;
     }
   }
 
   switch (message) {
+
+    // 🔒 Tamaño mínimo de ventana
+    case WM_GETMINMAXINFO: {
+      MINMAXINFO* minMaxInfo = reinterpret_cast<MINMAXINFO*>(lparam);
+
+      // Puedes ajustar estos valores si quieres permitir más reducción
+      minMaxInfo->ptMinTrackSize.x = 100;
+      minMaxInfo->ptMinTrackSize.y = 220;
+
+      return 0;
+    }
+
     case WM_FONTCHANGE:
       flutter_controller_->engine()->ReloadSystemFonts();
       break;

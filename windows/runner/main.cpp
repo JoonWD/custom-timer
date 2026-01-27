@@ -2,6 +2,9 @@
 #include <flutter/flutter_view_controller.h>
 #include <windows.h>
 
+#include <vector>
+#include <string>
+
 #include "flutter_window.h"
 #include "utils.h"
 
@@ -13,8 +16,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
     CreateAndAttachConsole();
   }
 
-  // Initialize COM, so that it is available for use in the library and/or
-  // plugins.
+  // Initialize COM
   ::CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
 
   flutter::DartProject project(L"data");
@@ -26,27 +28,27 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
 
   FlutterWindow window(project);
 
-// Tamaño inicial profesional (ChronoSync)
-const int width = 480;
-const int height = 680;
+  // Tamaño inicial profesional (ChronoSync)
+  const int width = 400;
+  const int height = 600;
 
-// Obtener tamaño de pantalla
-RECT screen;
-GetWindowRect(GetDesktopWindow(), &screen);
+  // Obtener tamaño de pantalla
+  RECT screen;
+  GetWindowRect(GetDesktopWindow(), &screen);
 
-int screenWidth = screen.right - screen.left;
-int screenHeight = screen.bottom - screen.top;
+  int screenWidth = screen.right - screen.left;
+  int screenHeight = screen.bottom - screen.top;
 
-// Centrar ventana
-int x = (screenWidth - width) / 2;
-int y = (screenHeight - height) / 2;
+  // Centrar ventana
+  int x = (screenWidth - width) / 2;
+  int y = (screenHeight - height) / 2;
 
-Win32Window::Point origin(x, y);
-Win32Window::Size size(width, height);
+  Win32Window::Point origin(x, y);
+  Win32Window::Size size(width, height);
 
-if (!window.Create(L"ChronoSync", origin, size)) {
-  return EXIT_FAILURE;
-}
+  if (!window.Create(L"ChronoSync", origin, size)) {
+    return EXIT_FAILURE;
+  }
 
   window.SetQuitOnClose(true);
 
