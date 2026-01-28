@@ -19,20 +19,32 @@ class TimeAdjusterColumn extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    final icon = mode == AdjusterMode.increment
+    final isIncrement = mode == AdjusterMode.increment;
+
+    final icon = isIncrement
         ? Icons.keyboard_arrow_up
         : Icons.keyboard_arrow_down;
 
-    final tooltip = mode == AdjusterMode.increment
-        ? '+ $label'
-        : '- $label';
+    final semanticLabel = isIncrement
+        ? 'Increase $label'
+        : 'Decrease $label';
 
-    return Tooltip(
-      message: tooltip,
-      child: AnimatedIconButton(
-        icon: icon,
-        color: theme.colorScheme.primary,
-        onPressed: onPressed,
+    return Semantics(
+      button: true,
+      label: semanticLabel,
+      child: Tooltip(
+        message: semanticLabel,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(
+            minWidth: 48,
+            minHeight: 48,
+          ),
+          child: AnimatedIconButton(
+            icon: icon,
+            color: theme.colorScheme.primary,
+            onPressed: onPressed,
+          ),
+        ),
       ),
     );
   }

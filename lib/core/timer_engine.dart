@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
+import '../core/ui_sounds.dart';
 
 enum TimerStatus { idle, running, paused, finished }
 
@@ -34,14 +35,14 @@ class TimerEngine {
   // =========================
 
   String get formattedTime {
-    final hours = _currentDuration.inHours.toString().padLeft(2, '0');
-    final minutes = (_currentDuration.inMinutes % 60).toString().padLeft(2, '0');
-    final seconds = (_currentDuration.inSeconds % 60).toString().padLeft(2, '0');
-    return '$hours:$minutes:$seconds';
+    final h = _currentDuration.inHours.toString().padLeft(2, '0');
+    final m = (_currentDuration.inMinutes % 60).toString().padLeft(2, '0');
+    final s = (_currentDuration.inSeconds % 60).toString().padLeft(2, '0');
+    return '$h:$m:$s';
   }
 
   // =========================
-  // CONTROL
+  // CONTROL PRINCIPAL
   // =========================
 
   void start() {
@@ -49,13 +50,13 @@ class TimerEngine {
     if (_currentDuration <= Duration.zero) return;
 
     _status = TimerStatus.running;
-
     _endTime = DateTime.now().add(_currentDuration);
 
     _ticker?.cancel();
-    _ticker = Timer.periodic(const Duration(milliseconds: 50), (_) {
-      _updateTime();
-    });
+    _ticker = Timer.periodic(
+      const Duration(milliseconds: 100), // suficiente precisión, menos consumo
+      (_) => _updateTime(),
+    );
 
     onTick();
   }
@@ -63,7 +64,7 @@ class TimerEngine {
   void pause() {
     if (_status != TimerStatus.running) return;
 
-    _updateTime(); // congelamos con precisión real
+    _updateTime(); // congelar exacto
     _ticker?.cancel();
     _status = TimerStatus.paused;
     onTick();
@@ -73,6 +74,8 @@ class TimerEngine {
     if (_status == TimerStatus.idle) return;
 
     _ticker?.cancel();
+    UISounds.stopAlarm();
+
     _currentDuration = _initialDuration;
     _status = TimerStatus.idle;
     onTick();
@@ -80,16 +83,25 @@ class TimerEngine {
 
   void stop() {
     _ticker?.cancel();
+    UISounds.stopAlarm();
+
     _currentDuration = Duration.zero;
     _initialDuration = Duration.zero;
     _status = TimerStatus.idle;
+    _endTime = null;
+
     onTick();
   }
 
   void _finish() {
+    if (_status == TimerStatus.finished) return; // protección doble trigger
+
     _ticker?.cancel();
     _currentDuration = Duration.zero;
     _status = TimerStatus.finished;
+
+    UISounds.playAlarmLoop();
+
     onTick();
   }
 
@@ -108,7 +120,7 @@ class TimerEngine {
   }
 
   // =========================
-  // AJUSTES
+  // AJUSTES (solo idle)
   // =========================
 
   void addSeconds(int value) {
@@ -127,9 +139,11 @@ class TimerEngine {
   }
 
   void _applyAdjustment(Duration delta) {
-    _currentDuration += delta;
-    if (_currentDuration.isNegative) _currentDuration = Duration.zero;
+    final updated = _currentDuration + delta;
+
+    _currentDuration = updated.isNegative ? Duration.zero : updated;
     _initialDuration = _currentDuration;
+
     onTick();
   }
 
@@ -139,5 +153,6 @@ class TimerEngine {
 
   void dispose() {
     _ticker?.cancel();
+    UISounds.stopAlarm();
   }
 }

@@ -5,6 +5,8 @@ import '../widgets/time_adjuster_column.dart';
 import '../widgets/circular_timer.dart';
 import '../widgets/animated_action_button.dart';
 import '../widgets/quick_adjust_button.dart';
+import '../core/ui_sounds.dart';
+import 'settings_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -28,22 +30,19 @@ class _HomeScreenState extends State<HomeScreen> {
     super.dispose();
   }
 
-  // =========================
-  // CONTROLES DINÁMICOS
-  // =========================
-
   Widget _buildControls() {
-    // Finished → solo botón Stop
     if (engine.isFinished) {
       return AnimatedActionButton(
         icon: Icons.stop,
         foregroundColor: Colors.redAccent,
         isCircle: true,
-        onPressed: engine.stop,
+        onPressed: () {
+          engine.stop();
+          UISounds.click();
+        },
       );
     }
 
-    // Running → Pause + Reset
     if (engine.isRunning) {
       return Row(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -51,21 +50,24 @@ class _HomeScreenState extends State<HomeScreen> {
           AnimatedActionButton(
             icon: Icons.pause,
             foregroundColor: Colors.blueAccent,
-            isCircle: false,
-            onPressed: engine.pause,
+            onPressed: () {
+              engine.pause();
+              UISounds.click();
+            },
           ),
           const SizedBox(width: 16),
           AnimatedActionButton(
             icon: Icons.restart_alt,
             foregroundColor: Colors.redAccent,
-            isCircle: false,
-            onPressed: engine.reset,
+            onPressed: () {
+              engine.reset();
+              UISounds.click();
+            },
           ),
         ],
       );
     }
 
-    // Paused → Resume + Reset
     if (engine.isPaused) {
       return Row(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -73,49 +75,56 @@ class _HomeScreenState extends State<HomeScreen> {
           AnimatedActionButton(
             icon: Icons.play_arrow,
             foregroundColor: Colors.greenAccent,
-            isCircle: false,
-            onPressed: engine.start,
+            onPressed: () {
+              engine.start();
+              UISounds.yet();
+            },
           ),
           const SizedBox(width: 16),
           AnimatedActionButton(
             icon: Icons.restart_alt,
             foregroundColor: Colors.redAccent,
-            isCircle: false,
-            onPressed: engine.reset,
+            onPressed: () {
+              engine.reset();
+              UISounds.click();
+            },
           ),
         ],
       );
     }
 
-    // Idle → solo Play
     return AnimatedActionButton(
       icon: Icons.play_arrow,
       foregroundColor: Colors.greenAccent,
-      isCircle: false,
-      onPressed: engine.start,
+      onPressed: () {
+        engine.start();
+        UISounds.yet();
+      },
     );
   }
 
-  // =========================
-  // UI PRINCIPAL
-  // =========================
-
   @override
   Widget build(BuildContext context) {
-    final bool showRunningView =
+    final showRunningView =
         engine.isRunning || engine.isPaused || engine.isFinished;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Custom Timer')),
+      appBar: AppBar(
+        title: const Text('ChronoSync'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings),
+            onPressed: () {
+              Navigator.of(
+                context,
+              ).push(MaterialPageRoute(builder: (_) => const SettingsScreen()));
+            },
+          ),
+        ],
+      ),
       body: Center(
         child: AnimatedSwitcher(
-          duration: const Duration(milliseconds: 350),
-          transitionBuilder: (child, animation) {
-            return FadeTransition(
-              opacity: animation,
-              child: ScaleTransition(scale: animation, child: child),
-            );
-          },
+          duration: const Duration(milliseconds: 300),
           child: showRunningView ? _buildRunningView() : _buildEditView(),
         ),
       ),
@@ -123,93 +132,98 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   // =========================
-  // EDIT VIEW
+  // EDIT VIEW — mantiene TimerDisplay + alineación perfecta
   // =========================
 
-Widget _buildEditView() {
-  return Column(
-    key: const ValueKey('edit'),
-    mainAxisAlignment: MainAxisAlignment.center,
-    children: [
-      // + + +
-      Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          TimeAdjusterColumn(
-            label: 'H',
-            mode: AdjusterMode.increment,
-            onPressed: () => engine.addHours(1),
-          ),
-          const SizedBox(width: 24),
-          TimeAdjusterColumn(
-            label: 'M',
-            mode: AdjusterMode.increment,
-            onPressed: () => engine.addMinutes(1),
-          ),
-          const SizedBox(width: 24),
-          TimeAdjusterColumn(
-            label: 'S',
-            mode: AdjusterMode.increment,
-            onPressed: () => engine.addSeconds(1),
-          ),
-        ],
-      ),
-
-      const SizedBox(height: 12),
-
-      SizedBox(
-        width: 360,
-        child: Stack(
-          clipBehavior: Clip.none,
-          alignment: Alignment.center,
-          children: [
-            TimerDisplay(time: engine.formattedTime),
-
-            // Botón flotante +10s
-            Positioned(
-              right: 0,
-              child: QuickAdjustButton(
-                label: '+10s',
-                onPressed: () => engine.addSeconds(10),
+  Widget _buildEditView() {
+    return Column(
+      key: const ValueKey('edit'),
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        SizedBox(
+          width: 360,
+          child: Column(
+            children: [
+              // ↑ Botones arriba perfectamente alineados
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  _incButton('H', () => engine.addHours(1)),
+                  const SizedBox(width: 16),
+                  _incButton('M', () => engine.addMinutes(1)),
+                  const SizedBox(width: 16),
+                  _incButton('S', () => engine.addSeconds(1)),
+                ],
               ),
-            ),
-          ],
+
+              const SizedBox(height: 8),
+
+              // Timer con +10s flotante
+              Stack(
+                alignment: Alignment.center,
+                children: [
+                  TimerDisplay(time: engine.formattedTime),
+                  Positioned(
+                    right: 0,
+                    child: QuickAdjustButton(
+                      label: '+10s',
+                      onPressed: () {
+                        UISounds.tap();
+                        engine.addSeconds(10);
+                      },
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 8),
+
+              // ↓ Botones abajo perfectamente alineados
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  _decButton('H', () => engine.addHours(-1)),
+                  const SizedBox(width: 16),
+                  _decButton('M', () => engine.addMinutes(-1)),
+                  const SizedBox(width: 16),
+                  _decButton('S', () => engine.addSeconds(-1)),
+                ],
+              ),
+            ],
+          ),
         ),
+
+        const SizedBox(height: 32),
+        _buildControls(),
+      ],
+    );
+  }
+
+  Widget _incButton(String label, VoidCallback onTap) {
+    return Center(
+      child: TimeAdjusterColumn(
+        label: label,
+        mode: AdjusterMode.increment,
+        onPressed: () {
+          UISounds.tap();
+          onTap();
+        },
       ),
+    );
+  }
 
-      const SizedBox(height: 12),
-
-      // - - -
-      Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          TimeAdjusterColumn(
-            label: 'H',
-            mode: AdjusterMode.decrement,
-            onPressed: () => engine.addHours(-1),
-          ),
-          const SizedBox(width: 24),
-          TimeAdjusterColumn(
-            label: 'M',
-            mode: AdjusterMode.decrement,
-            onPressed: () => engine.addMinutes(-1),
-          ),
-          const SizedBox(width: 24),
-          TimeAdjusterColumn(
-            label: 'S',
-            mode: AdjusterMode.decrement,
-            onPressed: () => engine.addSeconds(-1),
-          ),
-        ],
+  Widget _decButton(String label, VoidCallback onTap) {
+    return Center(
+      child: TimeAdjusterColumn(
+        label: label,
+        mode: AdjusterMode.decrement,
+        onPressed: () {
+          UISounds.tap();
+          onTap();
+        },
       ),
-
-      const SizedBox(height: 32),
-
-      _buildControls(),
-    ],
-  );
-}
-
+    );
+  }
 
   // =========================
   // RUNNING VIEW
@@ -226,7 +240,6 @@ Widget _buildEditView() {
           isRunning: engine.isRunning,
           isFinished: engine.isFinished,
         ),
-
         const SizedBox(height: 32),
         _buildControls(),
       ],
