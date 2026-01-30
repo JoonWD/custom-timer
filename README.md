@@ -31,11 +31,11 @@ Diseñada para ofrecer control preciso del tiempo, experiencia sonora personaliz
 
 ### Usuarios finales
 Descarga el ejecutable desde la sección **Releases**:
-> https://github.com/TU_USUARIO/chronosync/releases
+> https://github.com/JoonWD/chronosync/releases
 
 ### Desarrolladores
 ```bash
-git clone https://github.com/TU_USUARIO/chronosync.git
+git clone https://github.com/JoonWD/chronosync.git
 cd chronosync
 flutter pub get
 flutter run
